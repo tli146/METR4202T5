@@ -18,14 +18,14 @@ deltaY = 17
 # ===============================
 
 # subscribe to topic for this
-desired_pos = [0, -250, 20]
+desired_pos = [0, -150, 20]
 
 desired_x, desired_y, desired_z = desired_pos
 desired_r = np.sqrt(desired_x**2 + desired_y**2)
     
-def inverse_kin_analytical():
+def inverse_kin_analytical(end_position):
     # desired x,y and z
-    dx, dy, dz = desired_pos
+    dx, dy, dz = end_position
     # desired distance to robot
     dr = desired_r
     eas = [np.pi/2, 3*np.pi/8, np.pi/4] # End effector angles (with horizontal axis)
@@ -47,23 +47,23 @@ def inverse_kin_analytical():
     theta4 = np.pi/2 + ea - theta2 - theta3
     theta1 = np.arctan2(dx, -dy)
     thetas = [theta1,theta2,theta3,theta4]
-    print(thetas)
+    return thetas
 
-    # Use forward kinematics to test positions if wanted
-    # List of screws
-    Blist = np.array([[0, 0, 1, -deltaY, 0, 0],
-                      [1, 0, 0, 0, -L3-L4-L5, deltaY],
-                      [1, 0, 0, 0, -L4-L5, deltaY],
-                      [1, 0, 0, 0, -L5, deltaY]]).T
-    # Home configuration
-    M = np.array([[1, 0, 0, 0],
-                  [0, 1, 0, deltaY],
-                  [0, 0, 1, L1+L2+L3+L4+L5],
-                  [0, 0, 0, 1]])
+
+# Use forward kinematics to test positions if wanted
+# List of screws
+Blist = np.array([[0, 0, 1, -deltaY, 0, 0],
+                  [1, 0, 0, 0, -L3-L4-L5, deltaY],
+                  [1, 0, 0, 0, -L4-L5, deltaY],
+                  [1, 0, 0, 0, -L5, deltaY]]).T
+# Home configuration
+M = np.array([[1, 0, 0, 0],
+              [0, 1, 0, deltaY],
+              [0, 0, 1, L1+L2+L3+L4+L5],
+              [0, 0, 0, 1]])
     
-    # Check Forward Kin with thetas
-    newTheta = np.array(thetas)
-    desired = mr.FKinBody(M, Blist, newTheta)
-    print(desired)
-
-inverse_kin_analytical()
+# Check Forward Kin with thetas
+thetas = np.array(inverse_kin_analytical(desired_pos))
+print(thetas)
+desired = mr.FKinBody(M, Blist, thetas)
+print(desired)
