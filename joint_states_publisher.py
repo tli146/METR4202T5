@@ -10,23 +10,55 @@ import random
 # Always need this
 import rospy
 
+# Import Numpy and Modern_Robotics
+import numpy as np
+import modern_robotics as mr
+
 # Import message types
 from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
-
-# Your inverse kinematics function
-# This one doesn't actually do it though...
 def inverse_kinematics(pose: Pose) -> JointState:
     global pub
-    # TODO: Have fun :)
-    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(dummy_joint_states())
+    
+    """ ROBOT DIMENSION CONSTANTS (mm)"""
+    L1 = 50
+    L2 = 51
+    L3 = 117
+    L4 = 95
+    L5 = 95
+    deltaY = 17
 
+    # subscribe for this
+    desired_pos = [0, -90, 20]
+    desired_x, desired_y, desired_z = desired_pos
+    desired_r = np.sqrt(desired_x**2 + desired_y**2)
 
-# Funny code
-def dummy_joint_states() -> JointState:
+    # desired x,y and z (ease of notation)
+    dx, dy, dz = desired_pos
+    # desired distance to robot
+    dr = desired_r
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis) to iterate through
+    ea = np.pi/2
+    # Iterate through list of end angles (ideally want pi/2 unless out of reach)
+    for angle in eas:
+        # cos theta_3
+        ctheta3 = ((dr - L5*np.cos(angle) - deltaY*np.sin(angle))**2 + (dz+L5*np.sin(angle)-deltaY*np.cos(angle)-L1-L2)**2 - L3**2 - L4**2) \
+            / (2*L3*L4)
+        # Check if position is within reach
+        if 1-(ctheta3)**2 >= 0:
+            ea = angle
+            break
+
+    # Calculate joint angles
+    theta3 = np.arctan2(np.sqrt(1-(ctheta3)**2), ctheta3)
+    theta2 = np.arctan2(dr - L5*np.cos(ea) - deltaY*np.sin(ea), (dz+L5*np.sin(ea)-deltaY*np.cos(ea)-L1-L2)) - \
+        np.arctan2(L4*np.sin(theta3), L3+L4*np.cos(theta3))
+    theta4 = np.pi/2 + ea - theta2 - theta3
+    theta1 = np.arctan2(dx, -dy)
+    thetalist = [theta1,theta2,theta3,theta4]
+
     # Create message of type JointState
     msg = JointState(
         # Set header with current time
@@ -34,15 +66,18 @@ def dummy_joint_states() -> JointState:
         # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
         name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
     )
-    # Funny code
+    # Set angles of the robot
     msg.position = [
-        0,
-        0.436,
-        2.455,
-        0.2505
-    ]
-    return msg
+        pickupKinematics
+        thetalist[0],
+        -thetalist[1],
+        thetalist[2],
+        thetalist[3]
 
+    ]
+
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+    pub.publish(dummy_joint_states())
 
 def main():
     global pub
