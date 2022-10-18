@@ -31,7 +31,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
     deltaY = 17
 
     # subscribe for this
-    desired_pos = [0, -90, 20]
+    desired_pos = [100, 0, 90]
     desired_x, desired_y, desired_z = desired_pos
     desired_r = np.sqrt(desired_x**2 + desired_y**2)
 
@@ -70,13 +70,13 @@ def inverse_kinematics(pose: Pose) -> JointState:
     msg.position = [
         thetalist[0],
         -thetalist[1],
-        thetalist[2],
+        -thetalist[2],
         thetalist[3]
 
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    #pub.publish(dummy_joint_states())
+    pub.publish(msg)
 
 def main():
     global pub
@@ -95,7 +95,7 @@ def main():
     )
 
     # Initialise node with any node name
-    rospy.init_node('metr4202_w7_prac')
+    rospy.init_node('metr42025')
 
     # You spin me right round baby, right round...
     # Just stops Python from exiting and executes callbacks
