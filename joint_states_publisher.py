@@ -36,10 +36,10 @@ def dummy_joint_states() -> JointState:
     )
     # Funny code
     msg.position = [
-        random.uniform(-1.5, 1.5),
-        random.uniform(-1.5, 1.5),
-        random.uniform(-1.5, 1.5),
-        random.uniform(-1.5, 1.5)
+        0,
+        0.436,
+        2.455,
+        0.2505
     ]
     return msg
 
