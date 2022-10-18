@@ -76,7 +76,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(dummy_joint_states())
+    #pub.publish(dummy_joint_states())
 
 def main():
     global pub
