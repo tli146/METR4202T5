@@ -68,7 +68,6 @@ def inverse_kinematics(pose: Pose) -> JointState:
     )
     # Set angles of the robot
     msg.position = [
-        pickupKinematics
         thetalist[0],
         -thetalist[1],
         thetalist[2],
