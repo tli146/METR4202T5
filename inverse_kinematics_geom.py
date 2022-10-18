@@ -18,7 +18,7 @@ deltaY = 17
 # ===============================
 
 # subscribe to topic for this
-desired_pos = [0, -150, 20]
+desired_pos = [0, -250, 20]
 
 desired_x, desired_y, desired_z = desired_pos
 desired_r = np.sqrt(desired_x**2 + desired_y**2)
@@ -28,11 +28,11 @@ def inverse_kin_analytical(end_position):
     dx, dy, dz = end_position
     # desired distance to robot
     dr = desired_r
-    eas = [np.pi/2, 3*np.pi/8, np.pi/4] # End effector angles (with horizontal axis)
-    # cos theta_3
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis)
     ea = np.pi/2
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     for angle in eas:
+        # cos theta_3
         ctheta3 = ((dr - L5*np.cos(angle) - deltaY*np.sin(angle))**2 + (dz+L5*np.sin(angle)-deltaY*np.cos(angle)-L1-L2)**2 - L3**2 - L4**2) \
             / (2*L3*L4)
         # Check if position is within reach
@@ -64,6 +64,5 @@ M = np.array([[1, 0, 0, 0],
     
 # Check Forward Kin with thetas
 thetas = np.array(inverse_kin_analytical(desired_pos))
-print(thetas)
 desired = mr.FKinBody(M, Blist, thetas)
 print(desired)

@@ -19,9 +19,6 @@ from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
-
-# Your inverse kinematics function
-# This one doesn't actually do it though...
 def inverse_kinematics(pose: Pose) -> JointState:
     global pub
     
@@ -38,34 +35,29 @@ def inverse_kinematics(pose: Pose) -> JointState:
     desired_x, desired_y, desired_z = desired_pos
     desired_r = np.sqrt(desired_x**2 + desired_y**2)
 
-    # guess for thetas
-    theta1_guess = np.arctan2(desired_x, -desired_y)
-    theta2_guess = np.pi/2 - np.arccos(desired_r/200)
-    theta3_guess = np.pi - 2*np.arcsin(desired_r/200)
-    theta4_guess = np.pi - theta2_guess - theta3_guess
+    # desired x,y and z (ease of notation)
+    dx, dy, dz = desired_pos
+    # desired distance to robot
+    dr = desired_r
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis) to iterate through
+    ea = np.pi/2
+    # Iterate through list of end angles (ideally want pi/2 unless out of reach)
+    for angle in eas:
+        # cos theta_3
+        ctheta3 = ((dr - L5*np.cos(angle) - deltaY*np.sin(angle))**2 + (dz+L5*np.sin(angle)-deltaY*np.cos(angle)-L1-L2)**2 - L3**2 - L4**2) \
+            / (2*L3*L4)
+        # Check if position is within reach
+        if 1-(ctheta3)**2 >= 0:
+            ea = angle
+            break
 
-    """
-    Perform inverse kinematics using mr 
-    """
-    # List of screws
-    Blist = np.array([[0, 0, 1, -deltaY, 0, 0],
-                      [1, 0, 0, 0, -L3-L4-L5, deltaY],
-                      [1, 0, 0, 0, -L4-L5, deltaY],
-                      [1, 0, 0, 0, -L5, deltaY]]).T
-    # Home configuration
-    M = np.array([[1, 0, 0, 0],
-                  [0, 1, 0, deltaY],
-                  [0, 0, 1, L1+L2+L3+L4+L5],
-                  [0, 0, 0, 1]])
-    # Desired end effector configuration
-    T = np.array([[1,  0,  0, desired_x],
-                  [0, -1,  0, desired_y],
-                  [0,  0, -1, desired_z],
-                  [0,  0,  0, 1]])
-    thetalist0 = np.array([theta1_guess, theta2_guess, theta3_guess, theta4_guess])
-    eomg = 0.01
-    ev = 0.001
-    thetalist = mr.IKinBody(Blist, M, T, thetalist0, eomg, ev)
+    # Calculate joint angles
+    theta3 = np.arctan2(np.sqrt(1-(ctheta3)**2), ctheta3)
+    theta2 = np.arctan2(dr - L5*np.cos(ea) - deltaY*np.sin(ea), (dz+L5*np.sin(ea)-deltaY*np.cos(ea)-L1-L2)) - \
+        np.arctan2(L4*np.sin(theta3), L3+L4*np.cos(theta3))
+    theta4 = np.pi/2 + ea - theta2 - theta3
+    theta1 = np.arctan2(dx, -dy)
+    thetalist = [theta1,theta2,theta3,theta4]
 
     # Create message of type JointState
     msg = JointState(
@@ -77,9 +69,9 @@ def inverse_kinematics(pose: Pose) -> JointState:
     # Set angles of the robot
     msg.position = [
         thetalist[0],
-        thetalist[1],
+        -thetalist[1],
         thetalist[2],
-        -thetalist[3]
+        thetalist[3]
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
