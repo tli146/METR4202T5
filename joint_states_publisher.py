@@ -68,10 +68,12 @@ def inverse_kinematics(pose: Pose) -> JointState:
     )
     # Set angles of the robot
     msg.position = [
+        pickupKinematics
         thetalist[0],
         -thetalist[1],
         thetalist[2],
         thetalist[3]
+
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
