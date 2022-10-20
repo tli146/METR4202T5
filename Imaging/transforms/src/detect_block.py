@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from matplotlib.pyplot import thetagrids
 import rospy
@@ -7,10 +7,11 @@ import heapq
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import modern_robotics as mr
-from block.msg import Block
+import Block
+
 from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
-from std_msgs.msg import Header, String, int8, int16, bool
+from std_msgs.msg import Header, String, Int16, Bool
 
 calibration_ID = 10
 
