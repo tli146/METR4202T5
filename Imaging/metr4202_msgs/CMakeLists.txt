@@ -3,10 +3,7 @@ find_package(catkin REQUIRED COMPONENTS
    roscpp
    rospy
    std_msgs
-   geometry_msgs
-   fiducial_msgs
    message_generation
-   tf
 )
 
 add_message_files(
@@ -17,4 +14,6 @@ generate_messages(
    DEPENDENCIES
    std_msgs
 )
-catkin_package()
+catkin_package(
+   CATKIN_DEPENDS message_runtime
+)
