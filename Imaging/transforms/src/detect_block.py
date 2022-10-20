@@ -63,6 +63,8 @@ class DetectedBlock:
 
 
 class DetectBlock:
+    def detection_callback(fiducialTransformArray: FiducialTransformArray):
+        self.transformList = fiducialTransformArray.transforms
 
     def __init__(self):
         self.pub =rospy.Publisher(
@@ -91,9 +93,7 @@ class DetectBlock:
         self.blockList = []
         heapq.heapify()
 
-    def detection_callback(fiducialTransformArray: FiducialTransformArray):
-        self.transformList = fiducialTransformArray.transforms
-
+    
 
     def calibrate(self, Transf: Transform):
         rotQ = Transf.rotation
@@ -114,14 +114,6 @@ class DetectBlock:
         return "calibration ID not found"
 
 
-        
-
-
-   
-
-
-
-    
 
 
 if __name__ == '__main__':
