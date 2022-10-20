@@ -1,5 +1,3 @@
-#launch file for METR4202 Team 5 project
-
 <?xml version="1.0"?>
 
 <launch>
@@ -10,5 +8,8 @@
         <arg name="image" value="/image_raw"/>
         <arg name="dictionary" value="0"/>
     </include>
-    
+
+    <node name ="ximea_camera_main" pkg = "ximea_ros" type = "ximea_camera"/>
+    <node name = "ximea_camera_color" pkg = "ximea_color" type = "camera.py" />
+    <node name = "videoUI" pkg = "rqt_image_view" type = "rqt_image_view" />
 </launch>
