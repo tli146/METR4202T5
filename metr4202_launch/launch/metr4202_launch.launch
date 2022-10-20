@@ -12,4 +12,5 @@
     <node name ="ximea_camera_main" pkg = "ximea_ros" type = "ximea_camera"/>
     <node name = "ximea_camera_color" pkg = "ximea_color" type = "camera.py" />
     <node name = "videoUI" pkg = "rqt_image_view" type = "rqt_image_view" />
+    <node name = "detect_block" pkg = "metr4202_transforms" type = "detect_block.py" />
 </launch>
