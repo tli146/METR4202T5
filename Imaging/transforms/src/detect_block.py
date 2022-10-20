@@ -54,14 +54,6 @@ class DetectedBlock:
 
 
 
-
-
-    
-
-
-        
-
-
 class DetectBlock:
     def detection_callback(fiducialTransformArray: FiducialTransformArray):
         self.transformList = fiducialTransformArray.transforms
@@ -71,6 +63,11 @@ class DetectBlock:
         'priority_block', # Topic name
         Block, # Message type
         queue_size=10 # Topic size (optional)
+        )
+
+        self.pubCalibration = rospy.Publisher(
+        'Calibration',
+        String
         ) 
 
         self.sub_fiducials_transform = rospy.Subscriber("/fiducial_transforms",
@@ -123,8 +120,9 @@ if __name__ == '__main__':
     rate = rospy.Rate(10)
     detectBlock = DetectBlock()
     while not detectBlock.calibrated:
-        detectBlock.initialCalibration()
+        detectBlock.pubCalibration(detectBlock.initialCalibration())
     while not rospy.is_shutdown():
+        
         #publish message
         rate.sleep()
 
