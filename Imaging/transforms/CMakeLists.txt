@@ -1,4 +1,6 @@
 
+
+
 find_package(catkin REQUIRED COMPONENTS
    roscpp
    rospy
@@ -7,16 +9,14 @@ find_package(catkin REQUIRED COMPONENTS
    fiducial_msgs
    message_generation
    tf
+   metr4202_msgs
+   
+)
+project( metr4202_transforms )
+catkin_package(
+  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime message_runtime metr4202_msgs
 )
 
-add_message_files(
-   FILES
-   block.msg
-)
-generate_messages(
-   DEPENDENCIES
-   std_msgs
-)
 catkin_install_python(PROGRAMS src/detect_block.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

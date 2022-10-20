@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name> metr4202_transforms </name>
+  <name> metr4202_msgs </name>
   <version> 0.0.1 </version>
-  <description> block recognition and location file for metr4202 robot </description>
+  <description>custom msgs for metr4202 robot </description>
   <maintainer email="tli146@hotmail.com">Tony Li</maintainer>
 
   <license> Apache 2.0 </license>
@@ -17,7 +17,6 @@
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>std_msgs</depend>
-  <depend>metr4202_msgs</depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>ximea_ros</exec_depend>
 </package>

@@ -7,8 +7,8 @@ import heapq
 from scipy.spatial.transform import Rotation as R
 import numpy as np
 import modern_robotics as mr
-import Block
 
+from metr4202_msgs.msg import block as Block
 from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
