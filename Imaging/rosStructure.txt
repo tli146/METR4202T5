@@ -1,0 +1,13 @@
+
+
+Roscore
+	catkin_make
+	source devel/setup.bash
+	
+	
+		rosrun camera_calibration cameracalibrator.py --size 9x6 --square 0.024 image:=/ximea_ros/ximea_31706251/image_raw camera:=/ximea_ros/ximea_31706251
+		
+		rosrun  ximea_ros ximea_camera
+		rosrun  ximea_ros ximea_rgb
+		roslaunch ximea_ros ximea_aruco.launch serial:=31706251
+		rosrun rqt_image_view rqt_image_view
