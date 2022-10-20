@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 			cv::Mat img = cam[serial]->GetNextImageOcvMat();
 			ximea_ros.send_image(serial, img, format);
-			cv::imshow(serial, img);
+			//cv::imshow(serial, img);
 			char c = cv::waitKey(1);
 
 			if (c == '=') {
@@ -79,21 +79,14 @@ int main(int argc, char** argv) {
 				cam[serial]->SetGain(ximea_ros.gain);
 			}
 			
-			if (c == ' ' ) {
-				rgb_toggle = !rgb_toggle;
-			}
-			if (rgb_flag != rgb_toggle) {
-				rgb_flag = rgb_toggle;
-				if (!rgb_toggle) {
-					img_format = img_formats[0];
-					format = formats[0];
-				} else {
-					img_format = img_formats[1];
-					format = formats[1];
-				}
+			
+			//set to only use RGB camera
+			img_format = img_formats[1];
+			format = formats[1];
+			
 			cam[serial]->SetImageDataFormat(img_format);
-			}
-			cv::waitKey(1);
+			
+			//cv::waitKey(1);
 		}
 		ros::spinOnce();
 	}

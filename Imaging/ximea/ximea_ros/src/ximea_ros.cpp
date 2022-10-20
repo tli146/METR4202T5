@@ -6,7 +6,7 @@
 XimeaROS::XimeaROS(int argc, char** argv) {
     ros::init(argc, argv, "ximea_camera");
 	exposure_time = 10000.0;
-	gain = 0.0;
+	gain = 7.0;
 }
 
 /**

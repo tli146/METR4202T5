@@ -39,8 +39,9 @@ if __name__ == '__main__':
   try:
     while not rospy.is_shutdown():
         if img is not None:
-            cv2.imshow("Image", img)
-            cv2.waitKey(1)
+            #cv2.imshow("Image", img)
+            #cv2.waitKey(1)
+            None
   except KeyboardInterrupt:
     print("Shutting down")
   cv2.destroyAllWindows()
