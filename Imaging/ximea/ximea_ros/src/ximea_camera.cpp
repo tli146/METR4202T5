@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 			cv::Mat img = cam[serial]->GetNextImageOcvMat();
 			ximea_ros.send_image(serial, img, format);
-			//cv::imshow(serial, img);
+			cv::imshow(serial, img);
 			char c = cv::waitKey(1);
 
 			if (c == '=') {
