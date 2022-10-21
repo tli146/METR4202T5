@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from matplotlib.pyplot import thetagrids
 import rospy
 import math
 import heapq
@@ -89,39 +88,42 @@ class DetectBlock:
 
         self.Trx = np.eye(4)
 
-        self.transformsList = []
+        self.transformList = []
         self.blockList = []
         heapq.heapify(self.blockList)
 
     
 
     def calibrate(self, Transf: Transform):
+        
+        
         rotQ = Transf.rotation
         transQ = Transf.translation
-        rotM = R.as_matrix(R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w]))
-        transM = np.arry([transQ.x, transQ.y, transQ.z])*1000
-        Tx = mr.RpToTrans(rotM, transM)
-        self.Trx = mr.TransInv(Tx*mr.TransInv(self.Tr))
-        self.calibrated = True
+        rotM = R.
+
         
-    def initialCalibration(self, stringPublisher):
+        return True
+
+        
+    def initialCalibration(self):
         listID = []
-        if self.transformsList == None:
+        if self.transformList == None:
             return "No aruco cubes detected"
-        for fiducial in self.transformsList:
+        for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
-                
-                self.calibrate(fiducial.transform)
-                return str("successfully calibrated.")
+                loop = True
+                while(loop):
+                    self.calibrate(fiducial.transform)
+                    return str("successfully calibrated.")
             listID.append(fiducial.fiducial_id)
-        return str(self.transformsList)
+        return "calibration id not found" 
 
 
     def publishFiducials(self, stringPublisher):
         listID = []
-        for fiducial in self.transformsList:
+        for fiducial in self.transformList:
              listID.append(fiducial.fiducial_id)
-        listID.append(len(self.transformsList))
+        listID.append(len(self.transformList))
         stringPublisher.publish(str(listID))
 
 
@@ -131,12 +133,13 @@ if __name__ == '__main__':
     #set frequency to increase performance
     rate = rospy.Rate(ros_rate)
     detectBlock = DetectBlock()
-    #detectBlock.pubCalibration.publish("Starting calibration")
+    detectBlock.pubCalibration.publish("Starting calibration")
     #while not detectBlock.calibrated:
-        #detectBlock.pubCalibration.publish(detectBlock.initialCalibration())
+    
+        
     
     while not rospy.is_shutdown():
-        detectBlock.publishFiducials(detectBlock.pubCalibration)
+        detectBlock.pubCalibration.publish(detectBlock.initialCalibration())
     
         #publish message
         rate.sleep()
