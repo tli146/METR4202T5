@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Publishes a set of joints representative of the trajectory to get to just above the block
+This script publishes a set of random joint states to the dynamixel controller.
+Use this to get an idea of how to code your inverse kinematics!
 """
 
+# Always need this
 import rospy
 
 # Import Numpy and Modern_Robotics
@@ -14,47 +16,7 @@ from std_msgs.msg import Header
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 
-def trajectory_generation(pose: Pose) -> JointState:
-    """
-    Generate the trajectory between two positions. This will use a parabolic trajectory
-    (currently is linear) for the euclidean distance and a 5th order polynomial for time
-    """
-    global pub
-
-    # OBTAIN INITIAL JOINT ANGLES
-    thetalist0 = np.array(inverse_kinematics([100, 0, 100]))
-    # OBTAIN DESIRED END ANGLES
-    thetalistend = np.array(inverse_kinematics([0, -150, 50]))
-
-    # Constants for 5th order polynomial
-    a3 = 1.25
-    a4 = -15/16
-    a5 = 3/16
-
-    # T = 3 secs, 60 FPS
-    steps = 3*60
-    dt = 1/60
-    T = (steps-1)*dt
-
-    # Initialise thetalist desired trajectory
-    thetalistd = np.zeros([steps, len(thetalist0)])
-
-    for n in range(steps - 1):
-        s = a3*(n*dt)**3 + a4*(n*dt)**4 + a5*(n*dt)**5
-        thetalistd[n] = (thetalist0 + s*(thetalistend - thetalist0))
-
-    return thetalistd
-
-
-
-
-
-def inverse_kinematics(desired_pos):
-    """
-    Returns joint angles of robot for given position
-
-    :param desired_pos:     3d position list of form [x, y, z]
-    """
+def inverse_kinematics(pose: Pose) -> JointState:
     global pub
     
     """ ROBOT DIMENSION CONSTANTS (mm)"""
@@ -64,6 +26,20 @@ def inverse_kinematics(desired_pos):
     L4 = 95
     L5 = 95
     deltaY = 17
+
+    # subscribe for this
+    # neutral pos
+    desired_pos = [0, -100, 100]
+    # dropoff 1
+    #desired_pos = [100, 10, 60]
+    # dropoff 2
+    #desired_pos = [80, 120, 60]
+    # dropoff 3
+    #desired_pos = [-80, 120, 60]
+    # dropoff 4
+    #desired_pos = [-100, 10, 60]
+    # test pos
+    #desired_pos = [0, -250, 60]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
@@ -88,12 +64,28 @@ def inverse_kinematics(desired_pos):
     theta4 = np.pi/2 + ea - theta2 - theta3
     theta1 = np.arctan2(dx, -dy)
     thetalist = [theta1,theta2,theta3,theta4]
-    
-    # Slight coordinate changes due to frame assignment
-    return [thetalist[0], -thetalist[1], -thetalist[2], thetalist[3]]
 
+    # Create message of type JointState
+    msg = JointState(
+        # Set header with current time
+        header=Header(stamp=rospy.Time.now()),
+        # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
+        name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
+    )
+    # Set angles of the robot
+    msg.position = [
+        thetalist[0],
+        -thetalist[1],
+        -thetalist[2],
+        thetalist[3]
+
+    ]
+
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+    pub.publish(msg)
 
 def main():
+    """ Main loop """
     global pub
     # Create publisher
     pub = rospy.Publisher(
@@ -110,7 +102,7 @@ def main():
     )
 
     # Initialise node with any node name
-    rospy.init_node('metr4202_w7_prac')
+    rospy.init_node('metr42025')
 
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
