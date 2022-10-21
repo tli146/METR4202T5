@@ -13,7 +13,7 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 10
+calibration_ID = 11
 ros_rate = 2
 
 class DetectedBlock:
@@ -109,10 +109,10 @@ class DetectBlock:
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
         transM = np.array([transQ.x, transQ.y, transQ.z])
         Tx = mr.RpToTrans(rotM, transM)
-        while(True):
-            detectBlock.pubCalibration.publish(str(Tx))
-
+        
         self.Trx = np.linalg.inv(Tx * np.linalg.inv(self.Tr))
+        while(True):
+            detectBlock.pubCalibration.publish(str(self.Trx))
         self.calibrated = True
         
         return True
