@@ -27,9 +27,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
     L5 = 95
     deltaY = 17
 
-    # subscribe for this
-    # neutral pos
-    #desired_pos = [0, -100, 100]
+    # neutral stable pos
+    desired_pos = [0, -100, 100]
     # dropoff 1
     #desired_pos = [100, 10, 60]
     # dropoff 2
@@ -39,15 +38,15 @@ def inverse_kinematics(pose: Pose) -> JointState:
     # dropoff 4
     #desired_pos = [-100, 10, 60]
     # Show colour
-    desired_pos = [0, -100, 150]
+    #desired_pos = [0, -200, 300]
     # test pos
-    #desired_pos = [0, -250, 60]
+    #desired_pos = [0, -200, 100]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
     # desired distance to robot
     dr = np.sqrt(dx**2 + dy**2)
-    eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis) to iterate through
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     for angle in eas:
