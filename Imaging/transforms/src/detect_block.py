@@ -87,10 +87,10 @@ class DetectBlock:
 
         #set calibration aruco code location
         self.Tr = np.array([
-            [1,0,0,40],
-            [0,1,0,0],
+            [1,0,0,],
+            [0,1,0,40],
             [0,0,1,0],
-            [0,0,0,0]
+            [0,0,0,1]
         ])
 
         self.Trx = np.eye(4)
@@ -99,20 +99,23 @@ class DetectBlock:
         self.blockList = []
         heapq.heapify(self.blockList)
 
-    
+    def find_transM(self, Tansf:Transform):
+        rotQ = Transf.rotation
+        transQ = Transf.translation
+        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
+        rotM = R.as_matrix(rotM)
+        transM = np.array([transQ.x, transQ.y, transQ.z])
+        return mr.RpToTrans(rotM, transM)
 
     def calibrate(self, Transf: Transform):
         
         
-        rotQ = Transf.rotation
-        transQ = Transf.translation
-        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
-        transM = np.array([transQ.x, transQ.y, transQ.z])
-        Tx = mr.RpToTrans(rotM, transM)
         
-        self.Trx = np.linalg.inv(Tx * np.linalg.inv(self.Tr))
+        Tx = self.find_transM(Transf)
+        
+        self.Trx = np.dot(self.Tr, np.linalg.inv(Tx))
         while(True):
-            detectBlock.pubCalibration.publish(str(self.Trx))
+            detectBlock.pubCalibration.publish(str(Trx))
         self.calibrated = True
         
         return True
