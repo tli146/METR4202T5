@@ -38,6 +38,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
     #desired_pos = [-80, 120, 60]
     # dropoff 4
     #desired_pos = [-100, 10, 60]
+    # test pos
+    #desired_pos = [0, -250, 60]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos

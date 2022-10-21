@@ -1,6 +1,6 @@
 import rospy
 
-import joint_states_publisher
+import kinematics.scripts.joint_states_publisher
 
 # Import Numpy and Modern_Robotics
 import numpy as np
@@ -13,8 +13,7 @@ from geometry_msgs.msg import Pose
 
 def main():
     """ Main Loop """
-    rospy.
-    joint_states_publisher.go(1)
+    kinematics.scripts.joint_states_publisher.main()
     
 
 
