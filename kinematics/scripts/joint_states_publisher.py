@@ -28,7 +28,16 @@ def inverse_kinematics(pose: Pose) -> JointState:
     deltaY = 17
 
     # subscribe for this
-    desired_pos = [100, 0, 90]
+    # neutral pos
+    desired_pos = [0, -100, 100]
+    # dropoff 1
+    #desired_pos = [100, 10, 60]
+    # dropoff 2
+    #desired_pos = [80, 120, 60]
+    # dropoff 3
+    #desired_pos = [-80, 120, 60]
+    # dropoff 4
+    #desired_pos = [-100, 10, 60]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
@@ -74,6 +83,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
     pub.publish(msg)
 
 def main():
+    """ Main loop """
     global pub
     # Create publisher
     pub = rospy.Publisher(
