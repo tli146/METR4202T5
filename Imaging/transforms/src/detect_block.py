@@ -14,6 +14,7 @@ from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
 calibration_ID = 10
+ros_rate = 2
 
 class DetectedBlock:
     def __init__(self, id, x,y,z,theta,color ) -> None:
@@ -55,8 +56,9 @@ class DetectedBlock:
 
 
 class DetectBlock:
-    def detection_callback(fiducialTransformArray: FiducialTransformArray):
+    def detection_callback(self, fiducialTransformArray: FiducialTransformArray):
         self.transformList = fiducialTransformArray.transforms
+
 
     def __init__(self):
         self.pub =rospy.Publisher(
@@ -70,9 +72,10 @@ class DetectBlock:
         String
         ) 
 
-        self.sub_fiducials_transform = rospy.Subscriber("/fiducial_transforms",
+        self.sub_fiducials_transform = rospy.Subscriber(
+        "fiducial_transforms",
         FiducialTransformArray,
-        detection_callback       
+        self.detection_callback       
         )
         self.calibrated = False
 
@@ -88,7 +91,7 @@ class DetectBlock:
 
         self.transformsList = []
         self.blockList = []
-        heapq.heapify()
+        heapq.heapify(self.blockList)
 
     
 
@@ -101,28 +104,40 @@ class DetectBlock:
         self.Trx = mr.TransInv(Tx*mr.TransInv(self.Tr))
         self.calibrated = True
         
-    def initialCalibration(self):
+    def initialCalibration(self, stringPublisher):
+        listID = []
         if self.transformsList == None:
             return "No aruco cubes detected"
         for fiducial in self.transformsList:
             if(fiducial.fiducial_id == calibration_ID):
+                
                 self.calibrate(fiducial.transform)
-                return ("successfully calibrated. Trx =", self.Trx)
-        return "calibration ID not found"
+                return str("successfully calibrated.")
+            listID.append(fiducial.fiducial_id)
+        return str(self.transformsList)
 
 
+    def publishFiducials(self, stringPublisher):
+        listID = []
+        for fiducial in self.transformsList:
+             listID.append(fiducial.fiducial_id)
+        listID.append(len(self.transformsList))
+        stringPublisher.publish(str(listID))
 
 
 if __name__ == '__main__':
 
     rospy.init_node('detect_block')
     #set frequency to increase performance
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(ros_rate)
     detectBlock = DetectBlock()
-    while not detectBlock.calibrated:
-        detectBlock.pubCalibration(detectBlock.initialCalibration())
+    #detectBlock.pubCalibration.publish("Starting calibration")
+    #while not detectBlock.calibrated:
+        #detectBlock.pubCalibration.publish(detectBlock.initialCalibration())
+    
     while not rospy.is_shutdown():
-        
+        detectBlock.publishFiducials(detectBlock.pubCalibration)
+    
         #publish message
         rate.sleep()
 
