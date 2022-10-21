@@ -29,7 +29,7 @@ def inverse_kinematics(pose: Pose) -> JointState:
 
     # subscribe for this
     # neutral pos
-    desired_pos = [0, -100, 100]
+    #desired_pos = [0, -100, 100]
     # dropoff 1
     #desired_pos = [100, 10, 60]
     # dropoff 2
@@ -38,6 +38,8 @@ def inverse_kinematics(pose: Pose) -> JointState:
     #desired_pos = [-80, 120, 60]
     # dropoff 4
     #desired_pos = [-100, 10, 60]
+    # Show colour
+    desired_pos = [0, -100, 150]
     # test pos
     #desired_pos = [0, -250, 60]
 
