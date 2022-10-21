@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from matplotlib.pyplot import thetagrids
+from select import select
 import rospy
 import math
 import heapq
@@ -17,13 +17,19 @@ calibration_ID = 10
 ros_rate = 2
 
 class DetectedBlock:
-    def __init__(self, id, x,y,z,theta,color ) -> None:
+    def __init__(self, id, x,y,z,theta) -> None:
         self.id = id
         self.coordinate = (x,y,z)
         self.theta = theta
-        self.color = color
         self.priority = 0
+        self.color = -1
+
+    def setColor(self, color:int):
+        self.color = color
     
+    def setPriority(self, priority: int):
+        self.priority = priority 
+
     def toMsg(self) -> Block:
         msg = Block()
         Block.id = self.id
@@ -89,39 +95,48 @@ class DetectBlock:
 
         self.Trx = np.eye(4)
 
-        self.transformsList = []
+        self.transformList = []
         self.blockList = []
         heapq.heapify(self.blockList)
 
     
 
     def calibrate(self, Transf: Transform):
+        
+        
         rotQ = Transf.rotation
         transQ = Transf.translation
-        rotM = R.as_matrix(R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w]))
-        transM = np.arry([transQ.x, transQ.y, transQ.z])*1000
+        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
+        transM = np.array([transQ.x, transQ.y, transQ.z])
         Tx = mr.RpToTrans(rotM, transM)
-        self.Trx = mr.TransInv(Tx*mr.TransInv(self.Tr))
+        while(True):
+            detectBlock.pubCalibration.publish(str(Tx))
+
+        self.Trx = np.linalg.inv(Tx * np.linalg.inv(self.Tr))
         self.calibrated = True
         
-    def initialCalibration(self, stringPublisher):
+        return True
+
+        
+    def initialCalibration(self):
         listID = []
-        if self.transformsList == None:
+        if self.transformList == None:
             return "No aruco cubes detected"
-        for fiducial in self.transformsList:
+        for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
-                
-                self.calibrate(fiducial.transform)
-                return str("successfully calibrated.")
+                loop = True
+                while(loop):
+                    self.calibrate(fiducial.transform)
+                    return str("successfully calibrated.")
             listID.append(fiducial.fiducial_id)
-        return str(self.transformsList)
+        return "calibration id not found" 
 
 
     def publishFiducials(self, stringPublisher):
         listID = []
-        for fiducial in self.transformsList:
+        for fiducial in self.transformList:
              listID.append(fiducial.fiducial_id)
-        listID.append(len(self.transformsList))
+        listID.append(len(self.transformList))
         stringPublisher.publish(str(listID))
 
 
@@ -131,12 +146,13 @@ if __name__ == '__main__':
     #set frequency to increase performance
     rate = rospy.Rate(ros_rate)
     detectBlock = DetectBlock()
-    #detectBlock.pubCalibration.publish("Starting calibration")
+    detectBlock.pubCalibration.publish("Starting calibration")
     #while not detectBlock.calibrated:
-        #detectBlock.pubCalibration.publish(detectBlock.initialCalibration())
+    
+        
     
     while not rospy.is_shutdown():
-        detectBlock.publishFiducials(detectBlock.pubCalibration)
+        detectBlock.pubCalibration.publish(detectBlock.initialCalibration())
     
         #publish message
         rate.sleep()

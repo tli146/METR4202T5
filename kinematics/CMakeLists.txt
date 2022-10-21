@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(metr42025)
+project(metr4202_kinematics)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
