@@ -21,10 +21,10 @@ def trajectory_generation(pose: Pose) -> JointState:
     """
     global pub
 
-    # OBTAIN INITIAL JOINT ANGLES
-    thetalist0 = np.array(inverse_kinematics([100, 0, 100]))
+    # OBTAIN INITIAL JOINT ANGLES (this will be at position [100, 0, 100])
+    thetalist0 = np.array(inverse_kinematics([0, -100, 100]))
     # OBTAIN DESIRED END ANGLES
-    thetalistend = np.array(inverse_kinematics([0, -150, 50]))
+    thetalistend = np.array(inverse_kinematics([0, -200, 60]))
 
     # Constants for 5th order polynomial
     a3 = 1.25
@@ -43,11 +43,22 @@ def trajectory_generation(pose: Pose) -> JointState:
         s = a3*(n*dt)**3 + a4*(n*dt)**4 + a5*(n*dt)**5
         thetalistd[n] = (thetalist0 + s*(thetalistend - thetalist0))
 
-    return thetalistd
-
-
-
-
+        # Create message of type JointState
+        msg = JointState(
+            # Set header with current time
+            header=Header(stamp=rospy.Time.now()),
+            # Specify joint names (see `controller_config.yaml` under `dynamixel_interface/config`)
+            name=['joint_1', 'joint_2', 'joint_3', 'joint_4']
+        )
+        # Set angles of the robot
+        msg.position = [
+            thetalistd[n,0],
+            -thetalistd[n,1],
+            -thetalistd[n,2],
+            thetalistd[n,3]
+        ]
+        rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{msg.position}\nrot:\n{pose.orientation}\n]')
+        pub.publish(msg)
 
 def inverse_kinematics(desired_pos):
     """
@@ -106,7 +117,7 @@ def main():
     sub = rospy.Subscriber(
         'desired_pose', # Topic name
         Pose, # Message type
-        inverse_kinematics # Callback function (required)
+        trajectory_generation # Callback function (required)
     )
 
     # Initialise node with any node name
