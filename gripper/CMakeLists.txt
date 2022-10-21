@@ -161,13 +161,8 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  main.py
-  gripper/scripts/gripper_driver.py
-  gripper/scripts/gripper_publisher.py
-  kinematics/scripts/joint_states_publisher.py
-  kinematics/scripts/trajectory_to_block.py
-  kinematics/inverse_kinematics.py
-  kinematics/inverse_kinematics_geom.py
+  scripts/gripper_driver.py
+  scripts/gripper_publisher.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
