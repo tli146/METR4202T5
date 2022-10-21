@@ -24,6 +24,26 @@ class DetectedBlock:
         self.priority = 0
         self.color = -1
 
+    def __init__(self, id, Transf, Trx) -> None:
+        rotQ = Transf.rotation
+        transQ = Transf.translation
+        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
+        transM = np.array([transQ.x, transQ.y, transQ.z])*1000
+        Tx = mr.RpToTrans(rotM, transM)
+        Ta = Tx*Trx
+
+        r, p = mr.TransToRp
+
+        self.id = id
+        self.coordinate = tuple(p)
+
+        theta_1 = np.arctan2(r[0][1], r[0][2])
+        theta_1 = theta_1%(np.pi/4)
+        theta_2 = np.arctan2(p[1], p[0])
+        self.theta = np.abs(theta_1 - theta_2)
+        self.priority = 0
+        self.color = -1
+
     def setColor(self, color:int):
         self.color = color
     
@@ -64,6 +84,14 @@ class DetectedBlock:
 class DetectBlock:
     def detection_callback(self, fiducialTransformArray: FiducialTransformArray):
         self.transformList = fiducialTransformArray.transforms
+        for transform in self.transformList:
+            block = None
+            if len(self.blockList) > 0:
+
+                for block in self.blockList:
+                    pass
+                
+
 
 
     def __init__(self):
@@ -107,8 +135,10 @@ class DetectBlock:
         rotQ = Transf.rotation
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
-        transM = np.array([transQ.x, transQ.y, transQ.z])
+        transM = np.array([transQ.x, transQ.y, transQ.z])*1000
         Tx = mr.RpToTrans(rotM, transM)
+
+
         while(True):
             detectBlock.pubCalibration.publish(str(Tx))
 
