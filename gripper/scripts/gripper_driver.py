@@ -1,4 +1,3 @@
-<<<<<<< HEAD:gripper/scripts/gripper_driver.py
 #!/usr/bin/env python3
 import pigpio
 
@@ -11,7 +10,5 @@ def gripper_set(value):
     #2000 is the open position 
 
 if __name__ == "__main__":
-    gripper_set(1500)
+    gripper_set(2000)
     
-=======
->>>>>>> origin/imaging:gripper/gripper_driver.py

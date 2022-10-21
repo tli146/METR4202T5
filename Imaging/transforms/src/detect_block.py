@@ -13,7 +13,7 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 10
+calibration_ID = 11
 ros_rate = 2
 
 class DetectedBlock:
@@ -102,7 +102,7 @@ class DetectBlock:
         )
 
         self.pubCalibration = rospy.Publisher(
-        'Calibration',
+        'block_detect',
         String
         ) 
 
@@ -115,10 +115,10 @@ class DetectBlock:
 
         #set calibration aruco code location
         self.Tr = np.array([
-            [1,0,0,40],
-            [0,1,0,0],
+            [1,0,0,0],
+            [0,1,0,40],
             [0,0,1,0],
-            [0,0,0,0]
+            [0,0,0,1]
         ])
 
         self.Trx = np.eye(4)
@@ -127,25 +127,27 @@ class DetectBlock:
         self.blockList = []
         heapq.heapify(self.blockList)
 
-    
+    def find_transM(self, Transf:Transform):
+        rotQ = Transf.rotation
+        transQ = Transf.translation
+        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
+        rotM = R.as_matrix(rotM)
+        transM = np.array([transQ.x*1000, transQ.y*1000, transQ.z*1000])
+        return mr.RpToTrans(rotM, transM)
 
     def calibrate(self, Transf: Transform):
         
         
-        rotQ = Transf.rotation
-        transQ = Transf.translation
-        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
-        transM = np.array([transQ.x, transQ.y, transQ.z])*1000
-        Tx = mr.RpToTrans(rotM, transM)
 
-
+        
+        Tx = self.find_transM(Transf)
+        
+        self.Trx = np.dot(self.Tr, mr.TransInv(Tx))
         while(True):
-            detectBlock.pubCalibration.publish(str(Tx))
-
-        self.Trx = np.linalg.inv(Tx * np.linalg.inv(self.Tr))
+            detectBlock.pubCalibration.publish(str(self.Trx))
         self.calibrated = True
         
-        return True
+        
 
         
     def initialCalibration(self):
@@ -154,13 +156,17 @@ class DetectBlock:
             return "No aruco cubes detected"
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
-                loop = True
-                while(loop):
                     self.calibrate(fiducial.transform)
                     return str("successfully calibrated.")
             listID.append(fiducial.fiducial_id)
         return "calibration id not found" 
 
+    def track_fiducial(self, id):
+        for fiducial in self.transformList:
+            if(fiducial.fiducial_id == id):
+                Tf = self.find_transM(fiducial.transform)
+                detectBlock.pubCalibration.publish(str(Tf))    
+            
 
     def publishFiducials(self, stringPublisher):
         listID = []
@@ -182,7 +188,7 @@ if __name__ == '__main__':
         
     
     while not rospy.is_shutdown():
-        detectBlock.pubCalibration.publish(detectBlock.initialCalibration())
+        detectBlock.initialCalibration()
     
         #publish message
         rate.sleep()

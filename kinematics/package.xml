@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>metr42025</name>
+  <name>metr4202_kinematics</name>
   <version>0.0.0</version>
   <description>The metr42025 kinematics package</description>
 
