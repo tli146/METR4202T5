@@ -1,3 +1,4 @@
+<<<<<<< HEAD:gripper/scripts/gripper_driver.py
 #!/usr/bin/env python3
 import pigpio
 
@@ -12,3 +13,5 @@ def gripper_set(value):
 if __name__ == "__main__":
     gripper_set(1500)
     
+=======
+>>>>>>> origin/imaging:gripper/gripper_driver.py
