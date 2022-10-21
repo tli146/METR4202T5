@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from select import select
 import rospy
 import math
 import heapq
@@ -16,13 +17,19 @@ calibration_ID = 10
 ros_rate = 2
 
 class DetectedBlock:
-    def __init__(self, id, x,y,z,theta,color ) -> None:
+    def __init__(self, id, x,y,z,theta) -> None:
         self.id = id
         self.coordinate = (x,y,z)
         self.theta = theta
-        self.color = color
         self.priority = 0
+        self.color = -1
+
+    def setColor(self, color:int):
+        self.color = color
     
+    def setPriority(self, priority: int):
+        self.priority = priority 
+
     def toMsg(self) -> Block:
         msg = Block()
         Block.id = self.id
@@ -99,8 +106,14 @@ class DetectBlock:
         
         rotQ = Transf.rotation
         transQ = Transf.translation
-        rotM = R.
+        rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
+        transM = np.array([transQ.x, transQ.y, transQ.z])
+        Tx = mr.RpToTrans(rotM, transM)
+        while(True):
+            detectBlock.pubCalibration.publish(str(Tx))
 
+        self.Trx = np.linalg.inv(Tx * np.linalg.inv(self.Tr))
+        self.calibrated = True
         
         return True
 
