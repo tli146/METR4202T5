@@ -4,9 +4,6 @@ This script publishes a set of random joint states to the dynamixel controller.
 Use this to get an idea of how to code your inverse kinematics!
 """
 
-# Funny code
-import random
-
 # Always need this
 import rospy
 
@@ -31,14 +28,23 @@ def inverse_kinematics(pose: Pose) -> JointState:
     deltaY = 17
 
     # subscribe for this
-    desired_pos = [0, -90, 20]
-    desired_x, desired_y, desired_z = desired_pos
-    desired_r = np.sqrt(desired_x**2 + desired_y**2)
+    # neutral pos
+    desired_pos = [0, -100, 100]
+    # dropoff 1
+    #desired_pos = [100, 10, 60]
+    # dropoff 2
+    #desired_pos = [80, 120, 60]
+    # dropoff 3
+    #desired_pos = [-80, 120, 60]
+    # dropoff 4
+    #desired_pos = [-100, 10, 60]
+    # test pos
+    #desired_pos = [0, -250, 60]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
     # desired distance to robot
-    dr = desired_r
+    dr = np.sqrt(dx**2 + dy**2)
     eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
@@ -70,15 +76,16 @@ def inverse_kinematics(pose: Pose) -> JointState:
     msg.position = [
         thetalist[0],
         -thetalist[1],
-        thetalist[2],
+        -thetalist[2],
         thetalist[3]
 
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-    pub.publish(dummy_joint_states())
+    pub.publish(msg)
 
 def main():
+    """ Main loop """
     global pub
     # Create publisher
     pub = rospy.Publisher(
@@ -95,9 +102,8 @@ def main():
     )
 
     # Initialise node with any node name
-    rospy.init_node('metr4202_w7_prac')
+    rospy.init_node('metr42025')
 
-    # You spin me right round baby, right round...
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
 
