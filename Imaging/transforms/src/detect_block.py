@@ -13,23 +13,24 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 12
+calibration_ID = 13
 ros_rate = 2
 rotation_theta_threshold = 0.5
 
 class DetectedBlock:
 
-    def __init__(self, id, Transf, Trx) -> None:
+    def __init__(self, id, Transf, Toc) -> None:
         rotQ = Transf.rotation
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
         rotM = R.as_matrix(rotM)
         transM = np.array([transQ.x, transQ.y, transQ.z])
-        Tx = mr.RpToTrans(rotM, transM)
+        Tca = mr.RpToTrans(rotM, transM)
 
-        Ta = np.dot(Tx,Trx)
 
-        r, p = mr.TransToRp(Ta)
+        Toa = np.dot(Toc,Tca)
+
+        r, p = mr.TransToRp(Toa)
 
         self.id = id
         self.coordinate = p
@@ -110,14 +111,14 @@ class DetectBlock:
         self.calibrated = False
 
         #set calibration aruco code location
-        self.Tr = np.array([
+        self.Tox = np.array([
             [1,0,0,0],
-            [0,1,0,-0.19],
-            [0,0,1,0],
+            [0,-1,0,-0.19],
+            [0,0,-1,0],
             [0,0,0,1]
         ])
 
-        self.Trx = []
+        self.Toc = []
 
         self.transformList = []
         self.blockList = []
@@ -136,8 +137,8 @@ class DetectBlock:
 
 
     def calibrate(self, Transf: Transform):
-        Tx = self.find_transM(Transf)
-        self.Trx = np.dot(self.Tr, mr.TransInv(Tx))
+        Tcx = self.find_transM(Transf)
+        self.Toc = np.dot(self.Tox, mr.TransInv(Tcx))
         self.calibrated = True
         
         
@@ -150,7 +151,7 @@ class DetectBlock:
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
                     self.calibrate(fiducial.transform)
-                    return str(self.Trx)
+                    return str(self.Toc)
             listID.append(fiducial.fiducial_id)
         return "calibration id not found" 
 
@@ -160,10 +161,10 @@ class DetectBlock:
     def track_fiducial(self, id):
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == id):
-                block = DetectedBlock(id, fiducial.transform, self.Trx)
+                block = DetectedBlock(id, fiducial.transform, self.Toc)
 
 
-                detectBlock.pubCalibration.publish(str(self.find_transM(fiducial.transform)))    
+                detectBlock.pubCalibration.publish(str(block.coordinate))    
             
 
 
@@ -173,7 +174,7 @@ class DetectBlock:
 
         newBlocks = []
         for fiducial in self.transformList:
-            newBlock = DetectedBlock(fiducial.fiducial_id, fiducial.transform, self.Trx)
+            newBlock = DetectedBlock(fiducial.fiducial_id, fiducial.transform, self.Toc)
             newBlocks.append(newBlock)
         #add blocks
 
