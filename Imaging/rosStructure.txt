@@ -11,3 +11,4 @@ Roscore
 		rosrun  ximea_ros ximea_rgb
 		roslaunch ximea_ros ximea_aruco.launch serial:=31706251
 		rosrun rqt_image_view rqt_image_view
+		roslaunch dynamixel_interface dynamixel_interface_controller.launch
