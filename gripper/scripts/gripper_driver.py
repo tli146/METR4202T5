@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 import pigpio
+import rospy
+
+from std_msgs.msg import Int16
 
 def gripper_set(value):
     rpi = pigpio.pi()
@@ -9,6 +12,15 @@ def gripper_set(value):
     #1500 is the grip box position
     #2000 is the open position 
 
+def callback(state: Int16):
+    if state == 1:
+        gripper_set(2000) # Open
+    elif state == 2:
+        gripper_set(1500) # Close
+
+def main():
+    pub = rospy.Subscriber('state', Int16, callback)
+
 if __name__ == "__main__":
-    gripper_set(2000)
+    main()
     
