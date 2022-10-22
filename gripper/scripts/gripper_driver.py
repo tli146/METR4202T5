@@ -13,14 +13,15 @@ def gripper_set(value):
     #2000 is the open position 
 
 def callback(state: Int16):
-    if state == 1:
+    if state.data == 1:
         gripper_set(2000) # Open
-    elif state == 2:
+    elif state.data == 2:
         gripper_set(1500) # Close
 
 def main():
-    pub = rospy.Subscriber('state', Int16, callback)
+    rospy.init_node('gripper_listener')
+    sub = rospy.Subscriber('metr4202_state', Int16, callback)
+    rospy.spin()
 
 if __name__ == "__main__":
     main()
-    

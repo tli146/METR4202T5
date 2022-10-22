@@ -22,6 +22,8 @@ def inverse_kinematics(block_msg: block) -> JointState:
     global state
     global state1_wait
 
+    rospy.loginfo('Inverse_Kinematics')
+
     state1_wait = block_msg.wait
 
     """ ROBOT DIMENSION CONSTANTS (mm)"""
@@ -102,24 +104,13 @@ def inverse_kinematics(block_msg: block) -> JointState:
         thetalist[3]
     ]
 
-    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
+    #rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{msg.position}\nrot:\n{msg.orientation}\n]')
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{msg.position}')
     pub.publish(msg)
-
-def dummy_block_publisher_initiate(waitBool):
-    pub_dummy = rospy.Publisher(
-        'priority_block',
-        block
-    )
-    msg = block()
-    msg.x = 0
-    msg.y = -150
-    msg.z = 100
-    msg.wait = waitBool
-    pub_dummy.publish(msg)
 
 def callback_state(current_state: Int16):
     global state
-    state = current_state
+    state = current_state.data
 
 def main():
     # Initialise node
@@ -144,7 +135,7 @@ def main():
 
     # subscribe to state
     sub2 = rospy.Subscriber(
-        'state',
+        'metr4202_state',
         Int16,
         callback_state
     )
@@ -154,11 +145,7 @@ def main():
 
 
 if __name__ == '__main__':
-    frames = 0
+    
     main()
-    if frames > 300:
-        dummy_block_publisher_initiate(False)
-    else:
-        dummy_block_publisher_initiate(True)
-    frames += 1
+    
 
