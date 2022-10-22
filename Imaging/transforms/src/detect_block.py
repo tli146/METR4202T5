@@ -14,9 +14,18 @@ from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
 calibration_ID = 13
-ros_rate = 2
+ros_rate = 10
 rotation_theta_threshold = 3 
 #degrees
+
+
+
+#TODO: color change on ximea camera for system
+#tune gain and exposure for best practice
+#find way to decrease aruco tag detection threshold 
+#test priority value
+#mask detected blocks outside of conveyor belt
+
 
 class DetectedBlock:
 
@@ -275,6 +284,7 @@ class DetectBlock:
                     if np.abs(i.absTheta - j.absTheta) > rotation_theta_threshold:
                         return True
                     return False
+        return True
                 
                         
 
