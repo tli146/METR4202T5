@@ -1,0 +1,13 @@
+Open your terminal
+Write the command --> gedit ~/.bashrc
+I file will open on gedit
+Go to the bottom (my last line was "source /opt/ros/indigo/setup.bash" , for others it may differ)
+Go under that line and write --> source [YOUR PATH]/catkin_ws/devel/setup.bash
+Save and exit
+
+
+setup linux usb buffer size for ximea camera
+$sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb >/dev/null <<<0
+
+view node and topics structure:
+$ rosrun rqt_graph rqt_graph
