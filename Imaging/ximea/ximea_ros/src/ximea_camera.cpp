@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 	for (std::string serial : serials) {
 		cam[serial]->SetExposureTime(ximea_ros.exposure_time);
 		cam[serial]->SetGain(ximea_ros.gain);
-		cam[serial]->SetDownsampling((XI_DOWNSAMPLING_VALUE)1);
+		cam[serial]->SetDownsampling((XI_DOWNSAMPLING_VALUE)2);
 		cam[serial]->SetImageDataFormat(img_format);
 	}
 	
