@@ -4,9 +4,6 @@ This script publishes a set of random joint states to the dynamixel controller.
 Use this to get an idea of how to code your inverse kinematics!
 """
 
-# Funny code
-import random
-
 # Always need this
 import rospy
 
@@ -30,16 +27,26 @@ def inverse_kinematics(pose: Pose) -> JointState:
     L5 = 95
     deltaY = 17
 
-    # subscribe for this
-    desired_pos = [100, 0, 90]
-    desired_x, desired_y, desired_z = desired_pos
-    desired_r = np.sqrt(desired_x**2 + desired_y**2)
+    # neutral stable pos
+    desired_pos = [0, -100, 100]
+    # dropoff 1
+    #desired_pos = [100, 10, 60]
+    # dropoff 2
+    #desired_pos = [80, 120, 60]
+    # dropoff 3
+    #desired_pos = [-80, 120, 60]
+    # dropoff 4
+    #desired_pos = [-100, 10, 60]
+    # Show colour
+    #desired_pos = [0, -200, 300]
+    # test pos
+    #desired_pos = [0, -200, 100]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
     # desired distance to robot
-    dr = desired_r
-    eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis) to iterate through
+    dr = np.sqrt(dx**2 + dy**2)
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     for angle in eas:
@@ -72,19 +79,23 @@ def inverse_kinematics(pose: Pose) -> JointState:
         -thetalist[1],
         -thetalist[2],
         thetalist[3]
-
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     pub.publish(msg)
 
 def main():
+    # Initialise node
+    rospy.init_node('invkin_pickup')
+
+    """ Main loop """
     global pub
+
     # Create publisher
     pub = rospy.Publisher(
         'desired_joint_states', # Topic name
         JointState, # Message type
-        queue_size=10 # Topic size (optional)
+        queue_size=180 # Topic size (optional)
     )
 
     # Create subscriber
@@ -94,11 +105,7 @@ def main():
         inverse_kinematics # Callback function (required)
     )
 
-    # Initialise node with any node name
-    rospy.init_node('metr42025')
-
-    # You spin me right round baby, right round...
-    # Just stops Python from exiting and executes callbacks
+    # Stops Python from exiting and executes callbacks
     rospy.spin()
 
 

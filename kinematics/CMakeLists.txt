@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(metr42025)
+project(metr4202_kinematics)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -161,13 +161,8 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  main.py
-  gripper/scripts/gripper_driver.py
-  gripper/scripts/gripper_publisher.py
-  kinematics/scripts/joint_states_publisher.py
-  kinematics/scripts/trajectory_to_block.py
-  kinematics/inverse_kinematics.py
-  kinematics/inverse_kinematics_geom.py
+  scripts/joint_states_publisher.py
+  scripts/trajectory_to_block.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

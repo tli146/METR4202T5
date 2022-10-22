@@ -1,0 +1,20 @@
+image_width: 640
+image_height: 512
+camera_name: ximea_31706251
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [534.6194923152483, 0, 321.837591223118, 0, 533.9664110563644, 259.5339036204759, 0, 0, 1]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.336541777760462, 0.1250777993275775, -0.0007531154634942424, -0.0007997630780572047, 0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1, 0, 0, 0, 1, 0, 0, 0, 1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [463.5523376464844, 0, 321.1112274623483, 0, 0, 488.9169311523438, 259.3057056517137, 0, 0, 0, 1, 0]
