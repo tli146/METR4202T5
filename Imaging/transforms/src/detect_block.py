@@ -13,33 +13,27 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 11
+calibration_ID = 13
 ros_rate = 2
 rotation_theta_threshold = 0.5
 
 class DetectedBlock:
-    def __init__(self, id, x,y,z,absthetaz) -> None:
-        #theta in radians!!
-        self.id = id
-        self.coordinate = (x,y,z)
-        
-        self.priority = 0
-        self.absTheta = absthetaz
-        self.theta = np.abs((absthetaz - np.arctan2(y,x))%(np.pi/4))
-        
 
-    def __init__(self, id, Transf, Trx) -> None:
+    def __init__(self, id, Transf, Toc) -> None:
         rotQ = Transf.rotation
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
-        transM = np.array([transQ.x, transQ.y, transQ.z]*1000)
-        Tx = mr.RpToTrans(rotM, transM)
-        Ta = Tx*Trx
+        rotM = R.as_matrix(rotM)
+        transM = np.array([transQ.x, transQ.y, transQ.z])
+        Tca = mr.RpToTrans(rotM, transM)
 
-        r, p = mr.TransToRp
+
+        Toa = np.dot(Toc,Tca)
+
+        r, p = mr.TransToRp(Toa)
 
         self.id = id
-        self.coordinate = tuple(p)
+        self.coordinate = p
 
         theta_1 = np.arctan2(r[0][1], r[0][2])
         theta_1 = theta_1%(np.pi/4)
@@ -47,6 +41,9 @@ class DetectedBlock:
         self.theta = np.abs(theta_1 - theta_2)
         self.absTheta = theta_1
         self.priority = 0
+
+
+
 
     def setColor(self, color:int):
         self.color = color
@@ -114,14 +111,14 @@ class DetectBlock:
         self.calibrated = False
 
         #set calibration aruco code location
-        self.Tr = np.array([
+        self.Tox = np.array([
             [1,0,0,0],
-            [0,1,0,40],
-            [0,0,1,0],
+            [0,-1,0,-0.19],
+            [0,0,-1,0],
             [0,0,0,1]
         ])
 
-        self.Trx = np.eye(4)
+        self.Toc = []
 
         self.transformList = []
         self.blockList = []
@@ -134,14 +131,14 @@ class DetectBlock:
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
         rotM = R.as_matrix(rotM)
-        transM = np.array([transQ.x*1000, transQ.y*1000, transQ.z*1000])
+        transM = np.array([transQ.x, transQ.y, transQ.z])
         return mr.RpToTrans(rotM, transM)
 
 
 
     def calibrate(self, Transf: Transform):
-        Tx = self.find_transM(Transf)
-        self.Trx = np.dot(self.Tr, mr.TransInv(Tx))
+        Tcx = self.find_transM(Transf)
+        self.Toc = np.dot(self.Tox, mr.TransInv(Tcx))
         self.calibrated = True
         
         
@@ -154,31 +151,30 @@ class DetectBlock:
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
                     self.calibrate(fiducial.transform)
-                    return str("successfully calibrated.")
+                    return str(self.Toc)
             listID.append(fiducial.fiducial_id)
         return "calibration id not found" 
+
+
+
 
     def track_fiducial(self, id):
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == id):
-                Tf = self.find_transM(fiducial.transform)
-                detectBlock.pubCalibration.publish(str(Tf))    
+                block = DetectedBlock(id, fiducial.transform, self.Toc)
+
+
+                detectBlock.pubCalibration.publish(str(block.coordinate))    
             
 
-    def publishFiducials(self, stringPublisher):
-        listID = []
-        for fiducial in self.transformList:
-             listID.append(fiducial.fiducial_id)
-        listID.append(len(self.transformList))
-        stringPublisher.publish(str(listID))
 
 
-    def poseEstimation(self):
+    def findPriorityBlock(self):
         #require system to be calibrated
 
         newBlocks = []
         for fiducial in self.transformList:
-            newBlock = detectBlock(fiducial.fiducial_id, fiducial.transform, self.Trx)
+            newBlock = DetectedBlock(fiducial.fiducial_id, fiducial.transform, self.Toc)
             newBlocks.append(newBlock)
         #add blocks
 
@@ -272,10 +268,12 @@ if __name__ == '__main__':
         
     
     while not rospy.is_shutdown():
+        
         if not detectBlock.calibrated:
             detectBlock.initialCalibration()
+            
         else:
-            detectBlock.poseEstimation
+           detectBlock.track_fiducial(calibration_ID)
         rate.sleep()
 
 

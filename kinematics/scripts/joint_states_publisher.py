@@ -12,13 +12,18 @@ import numpy as np
 import modern_robotics as mr
 
 # Import message types
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Int16
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
+from metr4202_msgs.msg import block
 
-def inverse_kinematics(pose: Pose) -> JointState:
+def inverse_kinematics(block_msg: block) -> JointState:
     global pub
-    
+    global state
+    global state1_wait
+
+    state1_wait = block_msg.wait
+
     """ ROBOT DIMENSION CONSTANTS (mm)"""
     L1 = 50
     L2 = 51
@@ -27,8 +32,21 @@ def inverse_kinematics(pose: Pose) -> JointState:
     L5 = 95
     deltaY = 17
 
-    # neutral stable pos
-    desired_pos = [0, -100, 100]
+    # State 1 and wait: robot in initial neutral position
+    if state == 1 and block_msg.wait:
+        desired_pos = [0, -100, 100]
+
+    # if not wait, move to next state
+    elif state == 1 and not block_msg.wait:
+        state_pub = rospy.Publisher('state', Int16)
+        state_pub.publish(2)
+
+    # State 2: robot in
+    elif state == 2:
+        desired_pos = [block_msg.x, block_msg.y, block_msg.z]
+
+    # neutral stable pos 
+    #desired_pos = [0, -100, 100]
     # dropoff 1
     #desired_pos = [100, 10, 60]
     # dropoff 2
@@ -41,6 +59,9 @@ def inverse_kinematics(pose: Pose) -> JointState:
     #desired_pos = [0, -200, 300]
     # test pos
     #desired_pos = [0, -200, 100]
+    
+    # Subscribe to block information
+    #desired_pos = [block_msg.x, block_msg.y, block_msg.z]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
@@ -79,35 +100,65 @@ def inverse_kinematics(pose: Pose) -> JointState:
         -thetalist[1],
         -thetalist[2],
         thetalist[3]
-
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     pub.publish(msg)
 
+def dummy_block_publisher_initiate(waitBool):
+    pub_dummy = rospy.Publisher(
+        'priority_block',
+        block
+    )
+    msg = block()
+    msg.x = 0
+    msg.y = -150
+    msg.z = 100
+    msg.wait = waitBool
+    pub_dummy.publish(msg)
+
+def callback_state(current_state: Int16):
+    global state
+    state = current_state
+
 def main():
+    # Initialise node
+    rospy.init_node('invkin_pickup')
+
     """ Main loop """
     global pub
-    # Create publisher
+
+    # Create publisher to joint states
     pub = rospy.Publisher(
         'desired_joint_states', # Topic name
         JointState, # Message type
         queue_size=10 # Topic size (optional)
     )
 
-    # Create subscriber
+    # subscribe to block block topic
     sub = rospy.Subscriber(
-        'desired_pose', # Topic name
-        Pose, # Message type
+        'priority_block', # Topic name
+        block, # Message type
         inverse_kinematics # Callback function (required)
     )
 
-    # Initialise node with any node name
-    rospy.init_node('metr42025')
+    # subscribe to state
+    sub2 = rospy.Subscriber(
+        'state',
+        Int16,
+        callback_state
+    )
 
-    # Just stops Python from exiting and executes callbacks
+    # Stops Python from exiting and executes callbacks
     rospy.spin()
 
 
 if __name__ == '__main__':
+    frames = 0
     main()
+    if frames > 300:
+        dummy_block_publisher_initiate(False)
+    else:
+        dummy_block_publisher_initiate(True)
+    frames += 1
+
