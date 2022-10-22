@@ -67,19 +67,22 @@ def inverse_kinematics(pose: Pose) -> JointState:
         -thetalist[1],
         -thetalist[2],
         thetalist[3]
-
     ]
 
     rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     pub.publish(msg)
 
 def main():
+    # Initialise node
+    rospy.init_node('invkin_pickup')
+
     global pub
+
     # Create publisher
     pub = rospy.Publisher(
         'desired_joint_states', # Topic name
         JointState, # Message type
-        queue_size=10 # Topic size (optional)
+        queue_size=180 # Topic size (optional)
     )
 
     # Create subscriber
@@ -89,10 +92,7 @@ def main():
         inverse_kinematics # Callback function (required)
     )
 
-    # Initialise node with any node name
-    rospy.init_node('metr42025')
-
-    # Just stops Python from exiting and executes callbacks
+    # Stops Python from exiting and executes callbacks
     rospy.spin()
 
 
