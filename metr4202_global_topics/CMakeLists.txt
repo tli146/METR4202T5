@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(metr42025)
+project(metr4202_topics)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,7 +10,6 @@ project(metr42025)
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   rospy
-  sensor_msgs
   std_msgs
 )
 
@@ -161,9 +160,7 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  gripper/scripts/gripper_driver.py
-  kinematics/scripts/joint_states_publisher.py
-  metr4202_global_topics/state.py
+  state.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

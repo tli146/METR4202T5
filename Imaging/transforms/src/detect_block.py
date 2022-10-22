@@ -13,40 +13,38 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 11
+calibration_ID = 13
 ros_rate = 2
-rotation_theta_threshold = 0.5
+rotation_theta_threshold = 3 
+#degrees
 
 class DetectedBlock:
-    def __init__(self, id, x,y,z,absthetaz) -> None:
-        #theta in radians!!
-        self.id = id
-        self.coordinate = (x,y,z)
-        
-        self.priority = 0
-        self.absTheta = absthetaz
-        self.theta = np.abs((absthetaz - np.arctan2(y,x))%(np.pi/4))
-        
 
-    def __init__(self, id, Transf, Trx) -> None:
+    def __init__(self, id, Transf, Toc) -> None:
         rotQ = Transf.rotation
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
-        transM = np.array([transQ.x, transQ.y, transQ.z]*1000)
-        Tx = mr.RpToTrans(rotM, transM)
-        Ta = Tx*Trx
+        rotM = R.as_matrix(rotM)
+        transM = np.array([transQ.x, transQ.y, transQ.z])
+        Tca = mr.RpToTrans(rotM, transM)
 
-        r, p = mr.TransToRp
+
+        Toa = np.dot(Toc,Tca)
+
+        r, p = mr.TransToRp(Toa)
 
         self.id = id
-        self.coordinate = tuple(p)
+        self.coordinate = np.multiply(p, 1000)
 
         theta_1 = np.arctan2(r[0][1], r[0][2])
         theta_1 = theta_1%(np.pi/4)
         theta_2 = np.arctan2(p[1], p[0])
-        self.theta = np.abs(theta_1 - theta_2)
-        self.absTheta = theta_1
+        self.theta = int(np.rad2deg( np.abs(theta_1 - theta_2)))
+        self.absTheta = int(np.rad2deg(theta_1))
         self.priority = 0
+
+
+
 
     def setColor(self, color:int):
         self.color = color
@@ -58,12 +56,13 @@ class DetectedBlock:
 
     def toMsg(self) -> Block:
         msg = Block()
-        Block.id = self.id
-        Block.x = self.coordinate[0]
-        Block.y = self.coordinate[1]
-        Block.z = self.coordinate[2]
-        Block.theta = self.theta
-        return Block
+        msg.id = self.id
+        msg.x = int(self.coordinate[0])
+        msg.y = int(self.coordinate[1])
+        msg.z = int(self.coordinate[2])
+        msg.theta = self.theta
+        
+        return msg
 
     def _is_valid_operand(self, other):
         return (hasattr(other, "priority"))
@@ -84,27 +83,47 @@ class DetectedBlock:
             return NotImplemented
         return self.priority > other.priority
 
+    def _is_valid_operation(self, other):
+        return type(self) == type(other)
+
 
 
 class DetectBlock:
     def detection_callback(self, fiducialTransformArray: FiducialTransformArray):
         self.transformList = fiducialTransformArray.transforms
-        
+    
+    
                 
-
+    def stateUpdater(self, data):
+        self.state = data
 
 
     def __init__(self):
         self.pub =rospy.Publisher(
         'priority_block', # Topic name
         Block, # Message type
-        queue_size=10 # Topic size (optional)
         )
 
-        self.pubCalibration = rospy.Publisher(
+        self.publish_block = rospy.Publisher(
         'block_detect',
         String
-        ) 
+        )
+
+        self.publish_raw = rospy.Publisher(
+        'block_raw',
+        String
+        )  
+
+        self.publish_message = rospy.Publisher(
+        'metr4202_message',
+        String
+        )  
+
+        self.sub_state = rospy.Subscriber(
+        "metr4202_state",
+        Int16,
+        self.stateUpdater
+        )
 
         self.sub_fiducials_transform = rospy.Subscriber(
         "fiducial_transforms",
@@ -114,15 +133,15 @@ class DetectBlock:
         self.calibrated = False
 
         #set calibration aruco code location
-        self.Tr = np.array([
+        self.Tox = np.array([
             [1,0,0,0],
-            [0,1,0,40],
-            [0,0,1,0],
+            [0,-1,0,-0.19],
+            [0,0,-1,0.05],
             [0,0,0,1]
         ])
 
-        self.Trx = np.eye(4)
-
+        self.Toc = []
+        self.state = 0
         self.transformList = []
         self.blockList = []
         self.rotating = False
@@ -134,14 +153,14 @@ class DetectBlock:
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
         rotM = R.as_matrix(rotM)
-        transM = np.array([transQ.x*1000, transQ.y*1000, transQ.z*1000])
+        transM = np.array([transQ.x, transQ.y, transQ.z])
         return mr.RpToTrans(rotM, transM)
 
 
 
     def calibrate(self, Transf: Transform):
-        Tx = self.find_transM(Transf)
-        self.Trx = np.dot(self.Tr, mr.TransInv(Tx))
+        Tcx = self.find_transM(Transf)
+        self.Toc = np.dot(self.Tox, mr.TransInv(Tcx))
         self.calibrated = True
         
         
@@ -154,31 +173,30 @@ class DetectBlock:
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
                     self.calibrate(fiducial.transform)
-                    return str("successfully calibrated.")
+                    return str(self.Toc)
             listID.append(fiducial.fiducial_id)
         return "calibration id not found" 
+
+
+
 
     def track_fiducial(self, id):
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == id):
-                Tf = self.find_transM(fiducial.transform)
-                detectBlock.pubCalibration.publish(str(Tf))    
+                block = DetectedBlock(id, fiducial.transform, self.Toc)
+
+                detectBlock.publish_block.publish(str(block.coordinate))    
+                detectBlock.publish_raw.publish(str(fiducial.transform))    
             
 
-    def publishFiducials(self, stringPublisher):
-        listID = []
-        for fiducial in self.transformList:
-             listID.append(fiducial.fiducial_id)
-        listID.append(len(self.transformList))
-        stringPublisher.publish(str(listID))
 
 
-    def poseEstimation(self):
+    def findPriorityBlock(self):
         #require system to be calibrated
 
         newBlocks = []
         for fiducial in self.transformList:
-            newBlock = detectBlock(fiducial.fiducial_id, fiducial.transform, self.Trx)
+            newBlock = DetectedBlock(fiducial.fiducial_id, fiducial.transform, self.Toc)
             newBlocks.append(newBlock)
         #add blocks
 
@@ -192,17 +210,21 @@ class DetectBlock:
         numBlocks = len(self.blockList)
         if numBlocks ==0:
             pubEmpty = True
+            self.publish_message.publish("no blocks")
             
-        if numBlocks == 1 and self.blockList[0].id == calibration_ID:
+        elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
             pubEmpty = True
+            self.publish_message.publish("only calibration cube found")
             
-        if self.rotating:
+        elif self.rotating:
             pubEmpty = True
+            self.publish_message.publish("rotating")
 
         if pubEmpty:
             emptyBlock = Block()
             emptyBlock.wait = True
             self.pub.publish(emptyBlock)
+            return
 
         
         #publish empty wait if no tags detected or only calibration is detected
@@ -214,7 +236,7 @@ class DetectBlock:
                 #find distance to other blocks
                 deltaX = i.coordinate[0] - j.coordinate[0]
                 deltaY = i.coordinate[1] - j.coordinate[1]
-                dist = np.sqrt(deltaX^2 + deltaY^2)
+                dist = np.sqrt( np.square(deltaX) + np.square(deltaY))
                 if(dist > 50):
                     dist = 100
                 if(dist < 20):
@@ -225,9 +247,10 @@ class DetectBlock:
             i.setPriority(priority)
 
             #find highest priority (lower better)
-        currentBlock = block[0]
-        if currentBlock.id == calibration_ID:
-            currentBlock = block[1]
+
+        currentBlock = self.blockList[0]
+        if currentBlock.id == calibration_ID and len(self.blockList)>1:
+            currentBlock = self.blockList[1]
         for block in self.blockList:
             if not block.id == calibration_ID:
                 if block < currentBlock:
@@ -266,16 +289,21 @@ if __name__ == '__main__':
     #set frequency to increase performance
     rate = rospy.Rate(ros_rate)
     detectBlock = DetectBlock()
-    detectBlock.pubCalibration.publish("Starting calibration")
+    
     #while not detectBlock.calibrated:
     
         
     
     while not rospy.is_shutdown():
+        
         if not detectBlock.calibrated:
             detectBlock.initialCalibration()
+            
         else:
-            detectBlock.poseEstimation
+            detectBlock.findPriorityBlock()
+            detectBlock.publish_message.publish("finding priority")
+            
+
         rate.sleep()
 
 

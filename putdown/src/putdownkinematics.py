@@ -7,25 +7,24 @@ Use this to get an idea of how to code your inverse kinematics!
 # Always need this
 import rospy
 
-# Import Numpy and Modern_Robotics
+# Import Numpy and Modern_Robotics and pigpio
 import numpy as np
 import modern_robotics as mr
+import pigpio
 
 # Import message types
-from std_msgs.msg import Header, Int16
+from std_msgs.msg import Header
+from grip_set.msg import putdown_state
+from grip_set.msg import gripperset
 from sensor_msgs.msg import JointState
+from sensor_msgs.msg import blockColor
+from sensor_msgs.msg import state
 from geometry_msgs.msg import Pose
-from metr4202_msgs.msg import block
 
-def inverse_kinematics(block_msg: block) -> JointState:
+def putdownkinematics(pose: Pose) -> JointState:
     global pub
-    global state
-    global state1_wait
 
-    rospy.loginfo('Inverse_Kinematics')
-
-    state1_wait = block_msg.wait
-
+    
     """ ROBOT DIMENSION CONSTANTS (mm)"""
     L1 = 50
     L2 = 51
@@ -33,21 +32,17 @@ def inverse_kinematics(block_msg: block) -> JointState:
     L4 = 95
     L5 = 95
     deltaY = 17
-
-    # State 1 and wait: robot in initial neutral position
-    if state == 1 and block_msg.wait:
-        desired_pos = [0, -100, 100]
-
-    # if not wait, move to next state
-    elif state == 1 and not block_msg.wait:
-        state_pub = rospy.Publisher('state', Int16)
-        state_pub.publish(2)
-
-    # State 2: robot in
-    elif state == 2:
-        desired_pos = [block_msg.x, block_msg.y, block_msg.z]
-
-    # neutral stable pos 
+    if state == "True":
+        if blockColor == 0:
+            desired_pos = [100, 10, 60]
+        elif blockColor == 1:
+            desired_pos = [80, 120, 60]
+        elif blockColor ==2:
+            desired_pos = [-80, 120, 60]
+        elif blockColor ==3:
+            desired_pos = [-100, 10, 60]
+    # subscribe for this
+    # neutral pos
     #desired_pos = [0, -100, 100]
     # dropoff 1
     #desired_pos = [100, 10, 60]
@@ -57,19 +52,14 @@ def inverse_kinematics(block_msg: block) -> JointState:
     #desired_pos = [-80, 120, 60]
     # dropoff 4
     #desired_pos = [-100, 10, 60]
-    # Show colour
-    #desired_pos = [0, -200, 300]
     # test pos
-    #desired_pos = [0, -200, 100]
-    
-    # Subscribe to block information
-    #desired_pos = [block_msg.x, block_msg.y, block_msg.z]
+    #desired_pos = [0, -250, 60]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
     # desired distance to robot
     dr = np.sqrt(dx**2 + dy**2)
-    eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     for angle in eas:
@@ -102,50 +92,69 @@ def inverse_kinematics(block_msg: block) -> JointState:
         -thetalist[1],
         -thetalist[2],
         thetalist[3]
+
     ]
 
-    #rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{msg.position}\nrot:\n{msg.orientation}\n]')
-    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{msg.position}')
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     pub.publish(msg)
+    rospy.sleep(4)
 
-def callback_state(current_state: Int16):
-    global state
-    state = current_state.data
+
 
 def main():
-    # Initialise node
-    rospy.init_node('invkin_pickup')
-
     """ Main loop """
     global pub
+    global gripperPub
+    # Initialise node with any node name
+    rospy.init_node('metr42025_putdownkinematics')
 
-    # Create publisher to joint states
+    # Create publisher
     pub = rospy.Publisher(
         'desired_joint_states', # Topic name
         JointState, # Message type
         queue_size=10 # Topic size (optional)
     )
 
-    # subscribe to block block topic
+    # Create subscriber
     sub = rospy.Subscriber(
-        'priority_block', # Topic name
-        block, # Message type
-        inverse_kinematics # Callback function (required)
+        'blockColor', # Topic name
+        blockColor, # Message type
+        putdownkinematics # Callback function (required)
     )
 
-    # subscribe to state
-    sub2 = rospy.Subscriber(
-        'metr4202_state',
-        Int16,
-        callback_state
+    # Pub a msg to let the gripper open and block drop
+    gripperPub = rospy.Publisher(
+        'gripper_set',# Topic name
+        gripperset,# message type
+        queue_size=10 # topic size (optional)
     )
 
-    # Stops Python from exiting and executes callbacks
+    # pub a msg to tell other program that block has dropped and can run other program now
+    pub = rospy.Publisher(
+        "putdown_state",# Topic name
+        putdown_state,
+        queue_size=10 # Topic Size (optional)
+    )
+
+    # Just stops Python from exiting and executes callbacks
     rospy.spin()
+
+def gripper_set(value):
+    global gripperPub
+    rpi = pigpio.pi()
+    rpi.set_mode(18, pigpio.OUTPUT)
+    rpi.set_servo_pulsewidth(18,value)
+    #1000 is the closed position
+    #1500 is the grip box position
+    #2000 is the open position 
+    # Create message of type gripset
+    msg = gripperset()
+
+    msg.gripperset = (2000)
+    gripperPub.publish(msg)
+
+    rospy.sleep(0.5)
 
 
 if __name__ == '__main__':
-    
     main()
-    
-
