@@ -156,7 +156,7 @@ def main():
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
 
-def gripper_set(value):
+def gripper_set(value) -> gripperset:
     global gripperPub
     global statePub
     rpi = pigpio.pi()
