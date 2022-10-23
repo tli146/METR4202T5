@@ -29,6 +29,8 @@ class CameraViewer:
 
   def publish_color_img(self):
     img = self.img
+    if img is None:
+      return False
     bgr = img[img.shape[0] // 2, img.shape[1] // 2, :]
     color = ColorRGBA()
     color.r = bgr[2]
