@@ -153,7 +153,7 @@ class DetectBlock:
         #set calibration aruco code location
         self.Tox = np.array([
             [1,0,0,0],
-            [0,-1,0,-0.180],
+            [0,-1,0,-0.190],
             [0,0,-1,0.015],
             [0,0,0,1]
         ])

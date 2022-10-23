@@ -62,7 +62,7 @@ def inverse_kinematics(desired_pos):
     dy = dy*(1+0.001*dr)'''
 
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
-    eas = [np.pi/2, 3*np.pi/4, np.pi/4, -np.pi/4] # End effector angles (with horizontal axis) to iterate through
+    eas = [np.pi/3, 0, -np.pi/4] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     for angle in eas:
         # cos theta_3
@@ -172,12 +172,17 @@ class Joint_Handler:
             self.publish_message.publish( "1 and wait") 
         # if not wait, move to next state
         elif state == 1 and not block_msg.wait:
+
             self.block_x = -block_msg.x
             self.block_y = block_msg.y
             self.block_z = block_msg.z
+
             self.state_pub.publish(2)
             self.publish_message.publish( "1 and not wait") 
             sleep = 4
+            if block_y < -200:
+                block_y = block_y + 10
+                sleep = 5
         # State 2: robot moving to above the block
         elif state == 2:
             desired_pos = [block_x, block_y, 70]
@@ -185,12 +190,12 @@ class Joint_Handler:
             sleep = 1
         # State 3: robot lowering on block
         elif state == 3:
-            desired_pos = [block_x, block_y, 20]
+            desired_pos = [block_x, block_y, 40]
             self.state_pub.publish(4)
             sleep = 1
         # State 4: gripper grabbing block
         elif state == 4:
-            desired_pos = [block_x, block_y, 20]
+            desired_pos = [block_x, block_y, 40]
             self.state_pub.publish(5)
             sleep = 1
         # State 5: robot showing block to camera
