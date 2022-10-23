@@ -94,6 +94,8 @@ class Joint_Handler:
         self.block_msg = block()
         self.block_msg.wait = True
         self.state = 0
+        self.colour = 0
+        self.desired_putdown = [0,0,200]
 
         # Create publisher to joint states
         self.pub = rospy.Publisher(
@@ -125,18 +127,26 @@ class Joint_Handler:
             self.callback_state
         )
 
+        self.sub3 = rospy.Subscriber(
+            'detected_color',
+            Int16,
+            self.callback_colour
+        )
+
 
     def callback_block(self, block_msg: block):
         self.block_msg = block_msg
 
-    def callback_state(self,current_state: Int16):
+    def callback_state(self, current_state: Int16):
         self.state = current_state.data
 
+    def callback_colour(self, current_colour: Int16):
+        self.colour = current_colour.data
 
     def loop_joint_state(self):
         ''' Handles what position we want from the state and publishes 
             This will be constantly called as 'priority_block' is changed: won't always use
-            the block coords though. Needs priority_block constantly updated '''
+            the block coords though'''
 
         # Copy of block's coords (so it remembers)
         block_x = self.block_x
@@ -149,6 +159,8 @@ class Joint_Handler:
         desired_pos = [0, -100, 100]
         block_msg = self.block_msg
         thetalist = [0,0,0,0]
+
+        colour_pos = [[150, 10, 60],[80, 120, 60],[-80, 120, 60],[-150, 10, 60]]
         
         # State 0: moving to calibration
         if state == 0:
@@ -168,7 +180,7 @@ class Joint_Handler:
         # State 1 and wait: robot in initial neutral position
         if state == 1 and block_msg.wait:
             desired_pos = [0, -100, 100]
-            sleep = 1
+            sleep = 0.5
             self.publish_message.publish( "1 and wait") 
         # if not wait, move to next state
         elif state == 1 and not block_msg.wait:
@@ -179,38 +191,44 @@ class Joint_Handler:
 
             self.state_pub.publish(2)
             self.publish_message.publish( "1 and not wait") 
-            sleep = 1
-            if block_x > 20:
-                block_x = block_x + 20
-            if block_y < -150:
-                block_y = block_y + 70
-                block_z = block_z + 20
-                sleep = 5
+            sleep = 0.5
+            # Adjust by some constants
+            if self.block_x > 10:
+                self.block_x = self.block_x - 0
+            if self.block_y < -150:
+                self.block_y = self.block_y + 10
+                self.block_z = self.block_z + 20
         # State 2: robot moving to above the block
         elif state == 2:
-            desired_pos = [block_x, block_y, 70]
+            desired_pos = [self.block_x, self.block_y, 70]
             self.state_pub.publish(3)
             sleep = 1
         # State 3: robot lowering on block
         elif state == 3:
-            desired_pos = [block_x, block_y, 50]
+            desired_pos = [self.block_x, self.block_y, 50]
             self.state_pub.publish(4)
             sleep = 1
         # State 4: gripper grabbing block
         elif state == 4:
-            desired_pos = [block_x, block_y, 50]
+            desired_pos = [self.block_x, self.block_y, 50]
             self.state_pub.publish(5)
             sleep = 1
         # State 5: robot showing block to camera
         elif state == 5:
             desired_pos = [0, -180, 330]
+            self.state_pub.publish(9)
+            sleep = 1.5
+        # State 9: detect colour
+        elif state == 9:
+            desired_pos = [0, -180, 330]
             self.state_pub.publish(6)
-            sleep = 4
+            sleep = 1
+            self.desired_putdown = colour_pos[self.colour]
         # State 6: robot moving to dropoff
         elif state == 6:
-            desired_pos = [80, 120, 60]
+            desired_pos = self.desired_putdown
             self.state_pub.publish(7)
-            sleep = 2.5
+            sleep = 1.5
         # State 7: robot releasing block
         elif state == 7:
             desired_pos = [80, 120, 60]
@@ -219,7 +237,7 @@ class Joint_Handler:
         elif state == 8:
             desired_pos = [0, -100, 100]
             self.state_pub.publish(1)
-            sleep = 3
+            sleep = 1
 
 
         # Perform inverse kinematics for desired position
