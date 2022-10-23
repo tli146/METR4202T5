@@ -18,6 +18,6 @@ catkin_package(
   CATKIN_DEPENDS roscpp rospy std_msgs message_runtime message_runtime metr4202_msgs
 )
 
-catkin_install_python(PROGRAMS src/detect_block.py
+catkin_install_python(PROGRAMS scripts/detect_block.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

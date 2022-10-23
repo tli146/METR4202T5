@@ -78,6 +78,8 @@ int main(int argc, char** argv) {
 				}
 				cam[serial]->SetGain(ximea_ros.gain);
 			}
+
+			
 			
 			
 			//set to only use RGB camera
