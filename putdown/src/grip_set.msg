@@ -1,3 +1,3 @@
 int16 gripperset
 float64 JointState  
-string putdown_state
+string putdown_state1
