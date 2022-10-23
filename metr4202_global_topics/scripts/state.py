@@ -4,39 +4,40 @@ from std_msgs.msg import Int16
 
 
 
-def boostState(data):
-    ''' Callback for subscriber to state. Ensures data is received by subscribers '''
-    global found
-    global state 
-    state = data
-    found = True
-    rospy.loginfo('State boosted: ' + str(data))
+ros_rate = 2
+
+class StateManager:
+
+    def state_change(self, data):
+        self.state = data
+
+    def __init__(self):
+
+
+        self.state = 1
+
+        self.pub = rospy.Publisher(
+            'metr4202_state',
+            Int16,
+            queue_size=1
+        )
+
+        self.sub = rospy.Subscriber('metr4202_state', Int16, self.state_change)
 
     
-def main():
-    global found
-    found = False
-    # Initialise node to publish
-    rospy.init_node('state_publisher')
 
-    global state 
-    state = 1
-    # Publish state topic
-    pub = rospy.Publisher(
-        'metr4202_state',
-        Int16,
-        queue_size=1
-    )
+    
+    
 
-    sub = rospy.Subscriber('metr4202_state', Int16, boostState)
-
-    # Set starting state to 1
-    while not found:
-        pub.publish(1)
-    rospy.loginfo(1)
-
-    rospy.spin()
+    
 
 if __name__ == '__main__':
     # Run main 
-    main()
+    rospy.init_node('state_manager')
+    state_manager = StateManager()
+    rate = rospy.Rate(ros_rate)
+
+    while not rospy.is_shutdown():
+        state_manager.pub.publish(state_manager.state)
+
+        rate.sleep()

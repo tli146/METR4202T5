@@ -230,7 +230,7 @@ class DetectBlock:
             
         elif self.rotating:
             pubEmpty = True
-            self.publish_message.publish("rotating")
+            #self.publish_message.publish("rotating")
 
         if pubEmpty:
             emptyBlock = Block()
@@ -314,7 +314,7 @@ if __name__ == '__main__':
             
         else:
             detectBlock.findPriorityBlock()
-            detectBlock.publish_message.publish("finding priority")
+            # detectBlock.publish_message.publish("finding priority")
             
 
         rate.sleep()

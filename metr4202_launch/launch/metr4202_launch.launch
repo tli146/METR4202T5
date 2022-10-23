@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 
 <launch>
-    
+    <!-- state manager -->
+    <node name ="state_manager" pkg = "metr4202_topics" type = "state.py"/>
 
     
     <!-- camera-->

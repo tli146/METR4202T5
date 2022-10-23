@@ -14,10 +14,13 @@ def gripper_set(value):
 
 def callback(state: Int16):
     rospy.loginfo('Callback received')
-    if state.data == 1 or state.data == 2 or state.data == 3: #add other states here
-        gripper_set(2000) # Open
-    elif state.data == 4 or state.data == 5: #add other states here
-        gripper_set(1500) # Close
+    global state_previous
+    if state_previous != state:
+        if state.data == 1+1 or state.data == 2+1 or state.data == 3+1: #add other states here
+            gripper_set(2000) # Open
+        elif state.data == 4+1 or state.data == 5+1: #add other states here
+            gripper_set(1500) # Close
+    state_previous = state
 
 def main():
     rospy.init_node('gripper_listener')
@@ -25,4 +28,6 @@ def main():
     rospy.spin()
 
 if __name__ == "__main__":
+    global state_previous
+    state_previous = 0
     main()
