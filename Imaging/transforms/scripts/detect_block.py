@@ -332,9 +332,9 @@ if __name__ == '__main__':
                 
             
         else:
-            if detectBlock == 1:
+            if detectBlock.state == 1:
                 detectBlock.findPriorityBlock()
-            # detectBlock.publish_message.publish("finding priority")
+            detectBlock.publish_message.publish("finding priority")
             
 
         rate.sleep()
