@@ -16,9 +16,9 @@ def callback(state: Int16):
     rospy.loginfo('Callback received')
     global state_previous
     if state_previous != state:
-        if state.data == 1 or state.data == 1+1 or state.data == 2+1 or state.data == 3+1: #add other states here
+        if state.data == 1 or state.data == 2: #add other states here
             gripper_set(2000) # Open
-        elif state.data == 4+1 or state.data == 5+1: #add other states here
+        elif state.data == 4+1: #add other states here
             gripper_set(1500) # Close
     state_previous = state
 
