@@ -145,13 +145,14 @@ def main():
 
     # pub a msg to tell other program that block has dropped and can run other program now
 
-    statePub = 0                 # msg send to topic is 0
     #  msg.data=statePub     
     statePub = rospy.Publisher(
         "state",# Topic name
         Int16,  # msg type
         queue_size=10 
     )
+    # statePub = 0                 # msg send to topic is 0
+    # pub.publish(statePub)
 
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
