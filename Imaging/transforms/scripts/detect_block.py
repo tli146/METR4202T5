@@ -258,13 +258,14 @@ class DetectBlock:
                 deltaX = i.coordinate[0] - j.coordinate[0]
                 deltaY = i.coordinate[1] - j.coordinate[1]
                 dist = np.sqrt( np.square(deltaX) + np.square(deltaY))
-                if(dist > 50):
+                if(dist > 75):
                     dist = 100
-                if(dist < 20):
+                if(dist < 40):
                     dist = 0
                 sumDis += dist
             distWeight = sumDis/numBlocks
-            priority = i.theta/np.pi*180 + distWeight + i.coordinate[1]/ 2
+
+            priority = i.theta*2 + distWeight + np.abs(i.coordinate[1]/ 2)
             i.setPriority(priority)
 
             #find highest priority (lower better)
