@@ -14,11 +14,9 @@ def callback(state: Int16) -> Int16:
     global pub
     # State 1 and wait: robot in initial neutral position
     # if not wait, move to next state
-    if state.data == 1:
-        pub.publish(2)
 
     # State 2: robot moving to above the block
-    elif state.data == 2:
+    if state.data == 2:
         time.sleep(5)
         pub.publish(3)
 
