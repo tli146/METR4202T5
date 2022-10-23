@@ -153,6 +153,13 @@ class DetectBlock:
         #set calibration aruco code location
         self.Tox = np.array([
             [1,0,0,0],
+            [0,-1,0,-0.215],
+            [0,0,-1,0.117],
+            [0,0,0,1]
+        ])
+
+        self.ToxFlat = np.array([
+            [1,0,0,0],
             [0,-1,0,-0.190],
             [0,0,-1,0.015],
             [0,0,0,1]
@@ -162,6 +169,7 @@ class DetectBlock:
         self.state = 0
         self.transformList = []
         self.blockList = []
+        self.oldBlockList = []
         self.rotating = False
 
 
@@ -221,8 +229,9 @@ class DetectBlock:
             newBlocks.append(newBlock)
         #add blocks
 
-        self.rotating = self.rotationDetect(newBlocks, self.blockList)
+        self.rotating = self.rotationDetect(newBlocks, self.blockList, self.oldBlockList)
         #check for rotation with theta
+        self.oldBlockList = self.blockList
         self.blockList = newBlocks
         #updating blocklist
 
@@ -231,11 +240,11 @@ class DetectBlock:
         numBlocks = len(self.blockList)
         if numBlocks ==0:
             pubEmpty = True
-            self.publish_message.publish("no blocks")
+            #self.publish_message.publish("no blocks")
             
         elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
             pubEmpty = True
-            self.publish_message.publish("only calibration cube found")
+            #self.publish_message.publish("only calibration cube found")
             
         elif self.rotating:
             pubEmpty = True
@@ -266,7 +275,9 @@ class DetectBlock:
                 sumDis += dist
             distWeight = sumDis/numBlocks
 
-            priority = i.theta*3 + distWeight + np.abs(i.coordinate[1]/ 4)
+
+
+            priority = i.theta*2 + distWeight + np.abs(i.coordinate[1]/ 4)
             i.setPriority(priority)
 
             #find highest priority (lower better)
@@ -292,18 +303,30 @@ class DetectBlock:
                 
        
 
-    def rotationDetect(self, newBlocks, blockList):
+    def rotationDetect(self, newBlocks, blockList, oldBlockList):
+        if oldBlockList == []:
+            return True
         
+        rot = 0
         for i in newBlocks:
             for j in blockList:
                 if i.id == j.id:
-                    rot = str(np.abs(i.absTheta - j.absTheta))
-                    detectBlock.publish_message.publish(rot)
-                    if np.abs(i.absTheta - j.absTheta) < rotation_theta_threshold:
-                        detectBlock.publish_message.publish("not rotating")
-                        return False
+                    rot += np.abs(i.absTheta - j.absTheta)
+                    detectBlock.publish_message.publish(str(rot))
+        
+        for j in blockList:
+            for k in oldBlockList:
+                if j.id == k.id:
+                    rot += np.abs(j.absTheta - k.absTheta)
+                    detectBlock.publish_message.publish(str(rot))
 
-        return True
+                    
+        
+        if rot > rotation_theta_threshold:
+            detectBlock.publish_message.publish("rotating")
+            return True
+
+        return False
                 
                         
 
@@ -336,7 +359,7 @@ if __name__ == '__main__':
         else:
             if detectBlock.state == 1:
                 detectBlock.findPriorityBlock()
-                detectBlock.publish_message.publish("finding priority")
+                #detectBlock.publish_message.publish("finding priority")
             
 
         rate.sleep()

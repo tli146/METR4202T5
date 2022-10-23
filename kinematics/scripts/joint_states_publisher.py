@@ -185,20 +185,20 @@ class Joint_Handler:
         
         # State 0: moving to calibration
         if state == 0:
-            thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
+            thetalist = [0, np.pi/2*0.95, 0, 0]
             sleep = 3
             self.state_pub.publish(11)
             calibrating = True
 
         # State 11: intermediate calibration stage
         if state == 11:
-            thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
+            thetalist = [0, np.pi/2*0.95, 0, 0]
             calibrating = True
             self.state_pub.publish(10)
 
         # State 10: calibration stage
         if state == 10:
-            thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
+            thetalist = [0, np.pi/2*0.95, 0, 0]
             calibrating = True
 
         # State 1 and wait: robot in initial neutral position
@@ -240,7 +240,7 @@ class Joint_Handler:
         elif state == 4:
             desired_pos = [self.block_x, self.block_y, 50]
             self.state_pub.publish(5)
-            sleep = 1
+            sleep = 0.75
 
         # State 5: robot showing block to camera
         elif state == 5:
@@ -263,8 +263,10 @@ class Joint_Handler:
 
         # State 7: robot releasing block
         elif state == 7:
+            rospy.sleep(0.5)
             desired_pos = [80, 120, 60]
             self.state_pub.publish(8)
+
 
         # State 8: back to home position
         elif state == 8:

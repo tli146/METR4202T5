@@ -10,8 +10,7 @@ def gripper_set(value):
 
     :param value:   the value to set servo (2000 for open and 1500 for closed)
     """
-    rpi = pigpio.pi()
-    rpi.set_mode(18, pigpio.OUTPUT)
+    global rpi
     rpi.set_servo_pulsewidth(18,value)
 
 def callback(state: Int16):
@@ -45,5 +44,10 @@ def main():
 if __name__ == "__main__":
     # Initiate global previous state
     global state_previous
+    global rpi
+    rpi = pigpio.pi()
+    
+    rpi.set_mode(18, pigpio.OUTPUT)
+    
     state_previous = 0
     main()
