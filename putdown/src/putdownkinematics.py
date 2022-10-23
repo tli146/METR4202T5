@@ -115,7 +115,7 @@ def callback_color(ColorRGBA: Int16):       # sub current_state
     global currentcolor
     currentcolor = ColorRGBA
     putdownkinematics()
-    
+
 def main ():
     """ Main loop """
     global pub 
