@@ -5,6 +5,7 @@ from std_msgs.msg import Int16
 
 
 def boostState(data):
+    ''' Callback for subscriber to state. Ensures data is received by subscribers '''
     global found
     global state 
     state = data

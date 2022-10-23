@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-This script publishes a set of random joint states to the dynamixel controller.
-Use this to get an idea of how to code your inverse kinematics!
+This script obtains the desired position from block.msg and 
+publishes a set of joint states to the dynamixel controller.
+Also handles the state transitions since it is run at a high frequency
 """
 
 # Always need this
@@ -43,17 +44,16 @@ def inverse_kinematics(desired_pos):
     #desired_pos = [0, -200, 300]
     # test pos
     #desired_pos = [0, -200, 100]
-    
-    # Subscribe to block information
-    #desired_pos = [block_msg.x, block_msg.y, block_msg.z]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
-    # desired distance to robot
+
+    # desired distance to robot (radius)
     dr = np.sqrt(dx**2 + dy**2)
+
+    # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
-    # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     for angle in eas:
         # cos theta_3
         ctheta3 = ((dr - L5*np.cos(angle) - deltaY*np.sin(angle))**2 + (dz+L5*np.sin(angle)-deltaY*np.cos(angle)-L1-L2)**2 - L3**2 - L4**2) \
@@ -77,7 +77,7 @@ def inverse_kinematics(desired_pos):
 def callback_block(block_msg: block) -> JointState:
     ''' Handles what position we want from the state and publishes 
         This will be constantly called as 'priority_block' is changed: won't always use
-        the block coords though. Need the camera always running '''
+        the block coords though. Needs priority_block constantly updated '''
 
     global pub
     global state
@@ -91,7 +91,6 @@ def callback_block(block_msg: block) -> JointState:
     # if not wait, move to next state
     elif state == 1 and not block_msg.wait:
         state_pub.publish(2)
-
     # State 2: robot moving to above the block
     elif state == 2:
         desired_pos = [int(block_msg.x), int(block_msg.y), int(block_msg.z) + 50]
@@ -99,7 +98,6 @@ def callback_block(block_msg: block) -> JointState:
         if frames >= 300:
             state_pub.publish(3)
             frames = 0
-
     # State 3: robot lowering on block
     elif state == 3:
         desired_pos = [int(block_msg.x), int(block_msg.y), int(block_msg.z)]
@@ -107,7 +105,6 @@ def callback_block(block_msg: block) -> JointState:
         if frames >= 200:
             state_pub.publish(4)
             frames = 0
-    
     # State 4: gripper grabbing block
     elif state == 4:
         desired_pos = [int(block_msg.x), int(block_msg.y), int(block_msg.z)]
@@ -130,6 +127,7 @@ def callback_block(block_msg: block) -> JointState:
             state_pub.publish(1)
             frames = 0
 
+    # Perform inverse kinematics for desired position
     thetalist = inverse_kinematics(desired_pos)
 
      # Create message of type JointState
@@ -159,7 +157,6 @@ def main():
     # Initialise node
     rospy.init_node('invkin_pickup')
 
-    """ Main loop """
     global pub
     global frames
     frames = 0
@@ -178,7 +175,7 @@ def main():
         callback_block # Callback function (required)
     )
 
-    # subscribe to state
+    # subscribe to the current state
     sub2 = rospy.Subscriber(
         'metr4202_state',
         Int16,
@@ -190,7 +187,6 @@ def main():
 
 
 if __name__ == '__main__':
-    
     main()
     
 
