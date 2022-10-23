@@ -62,7 +62,7 @@ def inverse_kinematics(desired_pos):
     dy = dy*(1+0.001*dr)'''
 
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
-    eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
+    eas = [np.pi/2, 3*np.pi/4, np.pi/4, -np.pi/4] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     for angle in eas:
         # cos theta_3
@@ -150,7 +150,7 @@ class Joint_Handler:
         block_msg = self.block_msg
         thetalist = [0,0,0,0]
         
-        # State 0: calibration
+        # State 0: moving to calibration
         if state == 0:
             thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
             sleep = 5
@@ -161,6 +161,7 @@ class Joint_Handler:
             thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
             calibrating = True
             self.state_pub.publish(10)
+        # State 10: calibration stage
         if state == 10:
             thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
             calibrating = True
@@ -176,32 +177,37 @@ class Joint_Handler:
             self.block_z = block_msg.z
             self.state_pub.publish(2)
             self.publish_message.publish( "1 and not wait") 
-            sleep = 5
+            sleep = 4
         # State 2: robot moving to above the block
         elif state == 2:
-            desired_pos = [block_x, block_y, block_z + 50]
+            desired_pos = [block_x, block_y, 70]
             self.state_pub.publish(3)
-            sleep = 2
+            sleep = 1
         # State 3: robot lowering on block
         elif state == 3:
-            desired_pos = [block_x, block_y, block_z + 0]
+            desired_pos = [block_x, block_y, 20]
             self.state_pub.publish(4)
-            sleep = 2
+            sleep = 1
         # State 4: gripper grabbing block
         elif state == 4:
-            desired_pos = [block_x, block_y, block_z + 0]
+            desired_pos = [block_x, block_y, 20]
             self.state_pub.publish(5)
             sleep = 1
         # State 5: robot showing block to camera
         elif state == 5:
-            desired_pos = [0, -200, 300]
+            desired_pos = [0, -200, 330]
             self.state_pub.publish(6)
             sleep = 3
-        # State 6: robot showing block to camera
+        # State 6: robot moving to dropoff
         elif state == 6:
             desired_pos = [80, 120, 60]
+            self.state_pub.publish(7)
+            sleep = 3
+        # State 7: robot releasing block
+        elif state == 7:
+            desired_pos = [80, 120, 60]
             self.state_pub.publish(1)
-            sleep = 5
+            sleep = 1
 
 
         # Perform inverse kinematics for desired position

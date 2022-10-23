@@ -15,7 +15,7 @@ from std_msgs.msg import Header, String, Int16, Bool
 
 calibration_ID = 2
 ros_rate = 10
-rotation_theta_threshold = 3 
+rotation_theta_threshold = 5 
 #degrees
 
 class DetectedBlock:
@@ -102,7 +102,7 @@ class DetectBlock:
     
                 
     def stateUpdater(self, data):
-        self.state = data
+        self.state = data.data
 
     
 
@@ -154,7 +154,7 @@ class DetectBlock:
         self.Tox = np.array([
             [1,0,0,0],
             [0,-1,0,-0.180],
-            [0,0,-1,0.15],
+            [0,0,-1,0.015],
             [0,0,0,1]
         ])
 
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         
 
         if not detectBlock.calibrated:
-            detectBlock.publish_message.publish("calibrating")
+            detectBlock.publish_message.publish(str(detectBlock.state))
             if detectBlock.state == 10:
                 detectBlock.initialCalibration()
                 
