@@ -153,7 +153,7 @@ class Joint_Handler:
         # State 0: moving to calibration
         if state == 0:
             thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
-            sleep = 5
+            sleep = 3
             self.state_pub.publish(11)
             calibrating = True
         # State 11: intermediate calibration stage
@@ -179,7 +179,7 @@ class Joint_Handler:
 
             self.state_pub.publish(2)
             self.publish_message.publish( "1 and not wait") 
-            sleep = 4
+            sleep = 3.5
             if block_y < -200:
                 block_y = block_y + 10
                 sleep = 5
@@ -207,12 +207,12 @@ class Joint_Handler:
         elif state == 6:
             desired_pos = [80, 120, 60]
             self.state_pub.publish(7)
-            sleep = 3
+            sleep = 2.5
         # State 7: robot releasing block
         elif state == 7:
             desired_pos = [80, 120, 60]
             self.state_pub.publish(1)
-            sleep = 1
+            sleep = 0.5
 
 
         # Perform inverse kinematics for desired position
