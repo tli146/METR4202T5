@@ -30,8 +30,7 @@ def main():
     )
 
     # Set starting state to 1
-    while not rospy.is_shutdown():
-        pub.publish(2)
+    pub.publish(1)
 
     rospy.spin()
 
