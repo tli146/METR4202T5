@@ -16,9 +16,9 @@ from std_msgs.msg import Header,Int16           #✔
 # from grip_set.msg import gripperset
 from metr4202_state import current_state        #✔
 from sensor_msgs.msg import JointState          #✔
-from ximea_color_detect.cpp import ColorRGBA   # necessary import color info #✔
+from ximea_color_detect import ColorRGBA   # necessary import color info #✔
 #from sensor_msgs.msg import state
-from geometry_msgs.msg import Pose          # necessary#✔
+#from geometry_msgs.msg import Pose          # necessary#✔
 
 def putdownkinematics(pose: Pose) -> JointState: #generate output type which is jointstate// pub JointState
     global pub      # variable  which carry the info of JointState and position
@@ -114,7 +114,8 @@ def callback_state(current_state: Int16):       # sub current_state
 def callback_color(ColorRGBA: Int16):       # sub current_state
     global currentcolor
     currentcolor = ColorRGBA
-    
+    putdownkinematics()
+
 def main ():
     """ Main loop """
     global pub 
