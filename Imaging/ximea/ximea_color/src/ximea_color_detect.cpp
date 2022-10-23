@@ -15,6 +15,7 @@ void callback(const std_msgs::ColorRGBA::ConstPtr& color) {
     bgr.r = color->r;
     bgr.g = color->g;
     bgr.b = color->b;
+    flag = true;
 }
 
 
@@ -99,7 +100,7 @@ int main(int argc, char** argv) {
             
             msg.data = idx;
             pub.publish(msg);
-            //flag = false;
+            flag = false;
         }
         ros::spinOnce();
     }
