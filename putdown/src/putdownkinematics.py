@@ -10,9 +10,17 @@ import numpy as np
 import modern_robotics as mr
 import pigpio               # this import can generate PWN signal
 
+# Import message types
+from std_msgs.msg import Header,Int16           #✔
+# from grip_set.msg import putdown_state
+# from grip_set.msg import gripperset
+from metr4202_state import current_state        #✔
+from sensor_msgs.msg import JointState          #✔
+from ximea_color_detect import ColorRGBA   # necessary import color info #✔
+#from sensor_msgs.msg import state
+#from geometry_msgs.msg import Pose          # necessary#✔
 
 def putdownkinematics(pose: Pose) -> JointState: #generate output type which is jointstate// pub JointState
-
     global pub      # variable  which carry the info of JointState and position
     global state1    # state info from topic 'state'
     # global blockColor 
@@ -25,15 +33,13 @@ def putdownkinematics(pose: Pose) -> JointState: #generate output type which is 
     deltaY = 17
     if state1 == 6:          # if program's state change to 6, start calculating the info where the cube will putdown
         if currentcolor == 0: # different color correspond different zone
-
-            desired_pos = [100, 10, 60] # desired_pos to zone1
+            desired_pos = [100, 10, 60]
         elif currentcolor == 1:
-            desired_pos = [80, 120, 60] # desired_pos to zone2
+            desired_pos = [80, 120, 60]
         elif currentcolor ==2:
-            desired_pos = [-80, 120, 60] # desired_pos to zone3
+            desired_pos = [-80, 120, 60]
         elif currentcolor ==3:
-            desired_pos = [-100, 10, 60] # desired_pos to zone4
-
+            desired_pos = [-100, 10, 60]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
@@ -75,20 +81,14 @@ def putdownkinematics(pose: Pose) -> JointState: #generate output type which is 
 
     ]
 
-
-    #rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
-
+    rospy.loginfo(f'Got desired pose\n[\n\tpos:\n{pose.position}\nrot:\n{pose.orientation}\n]')
     pub.publish(msg) # prepare publish msg with type of JointState
     rospy.sleep(4)
 
 def gripper_set(value):           # pub gripper_set
     global gripperPub   # variable contain info of PWN set of gripper
-
-    global statePub     # state info pub to topic "state" to change the whole program to next state  
-
     global statePub     # state info pub to topic "state" to change the whole program to next state 
     global gripperset 
-
 
     # no usage
     # rpi = pigpio.pi()   # use rpi package to control motor
@@ -114,7 +114,6 @@ def callback_state(current_state: Int16):       # sub current_state
 def callback_color(ColorRGBA: Int16):       # sub current_state
     global currentcolor
     currentcolor = ColorRGBA
-
     putdownkinematics()
     
 def main ():
@@ -160,8 +159,3 @@ def main ():
         Int16, # message type
         queue_size =10
     )
-
-
-if __name__ == '__main__':
-    main()
-
