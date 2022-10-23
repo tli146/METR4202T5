@@ -8,7 +8,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <math.h>
 
-bool flag = false;
+bool flag = true;
 std_msgs::ColorRGBA bgr;
 
 void callback(const std_msgs::ColorRGBA::ConstPtr& color) {
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     green_bgr.b = 0;
 
     std_msgs::ColorRGBA blue_bgr;
-    blue_bgr.r = 0;
+    blue_bgr.r = 50;
     blue_bgr.g = 0;
     blue_bgr.b = 255;
     
@@ -95,10 +95,11 @@ int main(int argc, char** argv) {
                 }
             }
             std_msgs::Int16 msg;
-            std::string color_str = std::string(strings[idx]);
+            //std::string color_str = std::string(strings[idx]);
+            
             msg.data = idx;
             pub.publish(msg);
-            flag = false;
+            //flag = false;
         }
         ros::spinOnce();
     }

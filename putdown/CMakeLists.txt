@@ -8,8 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   geometry_msgs
   message_generation
-  ximea_color_detect
-  metr4202_state
+  ximea_color
+  metr4202_topics
    
 )
 
