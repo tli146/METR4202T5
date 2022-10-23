@@ -36,10 +36,17 @@ class DetectedBlock:
         self.id = id
         self.coordinate = np.multiply(p, 1000)
 
-        theta_1 = np.arctan2(r[0][0], r[0][1])
+        theta_1 = int(np.rad2deg(np.arctan2(r[0][0], r[0][1])))
+        theta_1 = theta_1%90
 
-        theta_2 = np.arctan2(p[1], p[0])
-        self.theta = int(np.rad2deg( np.abs(theta_1 - theta_2))%45)
+        if(theta_1 >45):
+            theta_1 = 90 - abs(theta_1)
+        
+
+
+        theta_2 = int(np.rad2deg(np.arctan2(p[1], p[0])))
+
+        self.theta = np.abs(theta_1 - theta_2)
         self.absTheta = int(np.rad2deg(theta_1)%45)
         self.priority = 0
 
