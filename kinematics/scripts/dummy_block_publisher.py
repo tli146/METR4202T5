@@ -1,3 +1,10 @@
+"""
+A dummy publisher to topic of type 'block.msg' to check block data sensing
+and its interaction with kinematics.
+
+Not used in final code, only for troubleshooting
+"""
+
 import rospy
 
 from std_msgs.msg import Header, Int16

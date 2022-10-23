@@ -5,29 +5,45 @@ import rospy
 from std_msgs.msg import Int16
 
 def gripper_set(value):
+    """
+    Sets the servo value
+
+    :param value:   the value to set servo (2000 for open and 1500 for closed)
+    """
     rpi = pigpio.pi()
     rpi.set_mode(18, pigpio.OUTPUT)
     rpi.set_servo_pulsewidth(18,value)
-    #1000 is the closed position
-    #1500 is the grip box position
-    #2000 is the open position 
 
 def callback(state: Int16):
-    rospy.loginfo('Callback received')
-    global state_previous
+    """
+    Callback for state subscriber. When state is updated, checks if it
+    has new data and whether any new servo assignment is needed
+
+    :param state:   Int16 value of current state
+    """
+    rospy.loginfo('Callback received') # for troubleshooting
+    global state_previous # global variable for the previous state
+    # Check if state hasn't changed
     if state_previous != state:
-        if state.data == 1 or state.data == 2: #add other states here
+        # Open gripper on given states
+        if state.data == 1 or state.data == 2:
             gripper_set(2000) # Open
-        elif state.data == 4+1: #add other states here
+        # Close gripper on given state
+        elif state.data == 5:
             gripper_set(1500) # Close
     state_previous = state
 
 def main():
+    """
+    Main function to execute
+    """
+    # Initiate node and subsriber
     rospy.init_node('gripper_listener')
     sub = rospy.Subscriber('metr4202_state', Int16, callback)
-    rospy.spin()
+    rospy.spin() # ensure callbacks executed
 
 if __name__ == "__main__":
+    # Initiate global previous state
     global state_previous
     state_previous = 0
     main()
