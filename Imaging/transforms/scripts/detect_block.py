@@ -275,9 +275,14 @@ class DetectBlock:
                 sumDis += dist
             distWeight = sumDis/numBlocks
 
+            L = np.sqrt( np.square(i.coordinate[0]) + np.square(i.coordinate[1]))
+
+            yWeight = np.abs(L/ 2)
+            if L > 230 :
+                yWeight = -yWeight
 
 
-            priority = i.theta*2 + distWeight + np.abs(i.coordinate[1]/ 4)
+            priority = i.theta*2 + distWeight - yWeight
             i.setPriority(priority)
 
             #find highest priority (lower better)
