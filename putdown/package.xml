@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name> metr4202_putdownkinematics </name>
+  <name> metr4202_putdown </name>
   <version> 0.0.1 </version>
   <description> receive the color msg and putdown the block to a right place </description>
   <maintainer email="974637429@qq.com">Shouyi Liu</maintainer>

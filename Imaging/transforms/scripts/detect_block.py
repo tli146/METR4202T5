@@ -184,7 +184,7 @@ class DetectBlock:
             if(fiducial.fiducial_id == calibration_ID):
                     self.calibrate(fiducial.transform)
                     self.state = 1
-                    self.publish_state(self.state)
+                    self.publish_state.publish(self.state)
                     return str(self.Toc)
             listID.append(fiducial.fiducial_id)
         return "calibration id not found" 
