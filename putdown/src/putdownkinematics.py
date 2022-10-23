@@ -33,13 +33,13 @@ def putdownkinematics() -> JointState: #generate output type which is jointstate
     deltaY = 17
     if state1 == 6:          # if program's state change to 6, start calculating the info where the cube will putdown
         if currentcolor == 0: # different color correspond different zone
-            desired_pos = [100, 10, 60] # desired_pos of zone1
+            desired_pos = [100, 10, 60] # desired_pos to zone1
         elif currentcolor == 1:
-            desired_pos = [80, 120, 60] # desired_pos of zone2
+            desired_pos = [80, 120, 60] # desired_pos to zone2
         elif currentcolor ==2:
-            desired_pos = [-80, 120, 60] # desired_pos of zone3
+            desired_pos = [-80, 120, 60] # desired_pos to zone3
         elif currentcolor ==3:
-            desired_pos = [-100, 10, 60] # desired_pos of zone4
+            desired_pos = [-100, 10, 60] # desired_pos to zone4
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
@@ -97,6 +97,9 @@ def gripper_set(value):           # pub gripper_set
     #1500 is the grip box position
     #2000 is the open position 
 
+    # Create message of type gripset
+    # msg = gripperset()          # output msg is gripperset
+    # msg.gripperset = (2000)     # msg is 20000
     gripperPub.publish(2000)     # msg published as name "gripperPub"
     
     rospy.sleep(0.5)            # after 0.5s change state to 0, at this moment, the gripper is already open
@@ -109,9 +112,8 @@ def callback_state(current_state: Int16):       # sub current_state
 
 def callback_color(ColorRGBA: Int16):       # sub current_state
     global currentcolor
-    currentcolor = ColorRGBA                
-    putdownkinematics()                     # use the color info to run putdown.py
-
+    currentcolor = ColorRGBA
+    putdownkinematics()
 def main ():
     """ Main loop """
     global pub 
