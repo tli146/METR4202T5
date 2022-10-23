@@ -36,12 +36,14 @@ def main():
     dummy_block_publisher_initiate(True)
     while not rospy.is_shutdown():
         loop += 1
-        if loop > 1000:
+        if loop > 30000:
             dummy_block_publisher_initiate(False)
-            loop = 0
+            #rospy.loginfo('Stop waiting ' + str(loop))
+            if loop > 60000:
+                loop = 0
+                rospy.loginfo('reset')
         else:
             dummy_block_publisher_initiate(True)
-            rospy.loginfo('Stop waiting')
 
     
     rospy.spin()

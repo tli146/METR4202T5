@@ -24,14 +24,10 @@ def main():
     pub = rospy.Publisher(
         'metr4202_state',
         Int16,
-        queue_size=10
+        queue_size=1
     )
 
-    sub = rospy.Subscriber(
-        'metr4202_state',
-        Int16,
-        boostState
-    )
+    sub = rospy.Subscriber('metr4202_state', Int16, boostState)
 
     # Set starting state to 1
     while not found:
