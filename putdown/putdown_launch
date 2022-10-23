@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+
+<launch>
+    <node name = "metr42025_putdownkinematics" pkg = "metr4202_putdown" type = "putdownkinematics.py" />
+</launch>

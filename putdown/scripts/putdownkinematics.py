@@ -14,16 +14,22 @@ import pigpio
 
 # Import message types
 from std_msgs.msg import Header
-from grip_set.msg import putdown_state
+from std_msgs.msg import Int16
+# from grip_set.msg import putdown_state
 from grip_set.msg import gripperset
 from sensor_msgs.msg import JointState
 from sensor_msgs.msg import blockColor
 from sensor_msgs.msg import state
 from geometry_msgs.msg import Pose
 
+def state_callback(current_state:Int16):
+    global state
+    state = current_state.data
+
+
 def putdownkinematics(pose: Pose) -> JointState:
     global pub
-
+    global state
     
     """ ROBOT DIMENSION CONSTANTS (mm)"""
     L1 = 50
@@ -32,7 +38,7 @@ def putdownkinematics(pose: Pose) -> JointState:
     L4 = 95
     L5 = 95
     deltaY = 17
-    if state == "True":
+    if state == 6:
         if blockColor == 0:
             desired_pos = [100, 10, 60]
         elif blockColor == 1:
@@ -99,12 +105,13 @@ def putdownkinematics(pose: Pose) -> JointState:
     pub.publish(msg)
     rospy.sleep(4)
 
-
-
 def main():
     """ Main loop """
     global pub
+    global sub
     global gripperPub
+    global stateSub
+    global statePub
     # Initialise node with any node name
     rospy.init_node('metr42025_putdownkinematics')
 
@@ -122,6 +129,13 @@ def main():
         putdownkinematics # Callback function (required)
     )
 
+    # Create subscriber of state
+    stateSub = rospy.Subscriber(
+        'state', # Topic name
+        Int16,  #Message type
+        state_callback
+    )
+
     # Pub a msg to let the gripper open and block drop
     gripperPub = rospy.Publisher(
         'gripper_set',# Topic name
@@ -130,17 +144,22 @@ def main():
     )
 
     # pub a msg to tell other program that block has dropped and can run other program now
-    pub = rospy.Publisher(
-        "putdown_state",# Topic name
-        putdown_state,
-        queue_size=10 # Topic Size (optional)
+
+    #  msg.data=statePub     
+    statePub = rospy.Publisher(
+        "state",# Topic name
+        Int16,  # msg type
+        queue_size=10 
     )
+    # statePub = 0                 # msg send to topic is 0
+    # pub.publish(statePub)
 
     # Just stops Python from exiting and executes callbacks
     rospy.spin()
 
-def gripper_set(value):
+def gripper_set(value) -> gripperset:
     global gripperPub
+    global statePub
     rpi = pigpio.pi()
     rpi.set_mode(18, pigpio.OUTPUT)
     rpi.set_servo_pulsewidth(18,value)
@@ -149,11 +168,12 @@ def gripper_set(value):
     #2000 is the open position 
     # Create message of type gripset
     msg = gripperset()
-
-    msg.gripperset = (2000)
-    gripperPub.publish(msg)
-
+    msg.gripperset = (2000)   # msg is 20000
+    gripperPub.publish(msg)   # msg pub to 
+    
     rospy.sleep(0.5)
+    statePub = rospy.Publisher('state', Int16)   #statePub is the message which pub to topic 'state'
+    statePub.publish(0)  # msg pub to 'state' is 0
 
 
 if __name__ == '__main__':

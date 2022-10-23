@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <std_msgs/ColorRGBA.h>
-#include <std_msgs/String.h>
+#include <std_msgs/Int16.h>
 #include <opencv2/core.hpp> 
 #include <opencv2/opencv.hpp> 
 #include <opencv2/highgui/highgui.hpp>
@@ -15,7 +15,6 @@ void callback(const std_msgs::ColorRGBA::ConstPtr& color) {
     bgr.r = color->r;
     bgr.g = color->g;
     bgr.b = color->b;
-    flag = true;
 }
 
 
@@ -44,7 +43,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh_sub;
     ros::NodeHandle nh_pub;
     ros::Subscriber sub = nh_sub.subscribe("/test_color", 100, callback);
-    ros::Publisher pub = nh_sub.advertise<std_msgs::String>("/detected_color", 10);
+    ros::Publisher pub = nh_sub.advertise<std_msgs::Int16>("/detected_color", 10);
 
     std_msgs::ColorRGBA red_bgr;
     red_bgr.r = 255;
@@ -67,12 +66,7 @@ int main(int argc, char** argv) {
     yellow_bgr.b = 0;
 
 
-    char* strings[4] = {
-        "RED",
-        "GREEN",
-        "BLUE",
-        "YELLOW",
-    };
+
     
 
     while (ros::ok()) {
@@ -100,9 +94,9 @@ int main(int argc, char** argv) {
                     idx = i;
                 }
             }
-            std_msgs::String msg;
+            std_msgs::Int16 msg;
             std::string color_str = std::string(strings[idx]);
-            msg.data = color_str;
+            msg.data = idx;
             pub.publish(msg);
             flag = false;
         }

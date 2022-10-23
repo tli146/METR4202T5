@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   message_generation
+  ximea_color_detect
+  metr4202_state
    
 )
 
@@ -24,7 +26,7 @@ generate_messages(
 project( metr4202_putdown )
 
 catkin_package(
-  CATKIN_DEPENDS geometry_msgs rospy sensor_msgs std_msgs message_runtime
+  CATKIN_DEPENDS geometry_msgs rospy sensor_msgs std_msgs message_runtime ximea_color_detect metr4202_state
 )
 
 
