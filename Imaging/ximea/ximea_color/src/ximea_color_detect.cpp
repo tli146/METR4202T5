@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     green_bgr.b = 0;
 
     std_msgs::ColorRGBA blue_bgr;
-    blue_bgr.r = 50;
+    blue_bgr.r = 0;
     blue_bgr.g = 0;
     blue_bgr.b = 255;
     
