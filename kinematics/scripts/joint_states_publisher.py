@@ -152,17 +152,17 @@ class Joint_Handler:
         
         # State 0: calibration
         if state == 0:
-            thetalist = [0, np.pi/2, 0, 0]
+            thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
             sleep = 5
             self.state_pub.publish(11)
             calibrating = True
         # State 11: intermediate calibration stage
         if state == 11:
-            thetalist = [0, np.pi/2, 0, 0]
+            thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
             calibrating = True
             self.state_pub.publish(10)
         if state == 10:
-            thetalist = [0, np.pi/2, 0, 0]
+            thetalist = [0, 2*np.pi/3, -np.pi/6, 0]
             calibrating = True
         # State 1 and wait: robot in initial neutral position
         if state == 1 and block_msg.wait:
