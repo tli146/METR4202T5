@@ -13,7 +13,7 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 1
+calibration_ID = 2
 ros_rate = 10
 rotation_theta_threshold = 3 
 #degrees
@@ -153,8 +153,8 @@ class DetectBlock:
         #set calibration aruco code location
         self.Tox = np.array([
             [1,0,0,0],
-            [0,-1,0,-0.19],
-            [0,0,-1,0.05],
+            [0,-1,0,-0.196],
+            [0,0,-1,0.117],
             [0,0,0,1]
         ])
 
@@ -319,7 +319,9 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         
         if not detectBlock.calibrated:
-            detectBlock.initialCalibration()
+            if detectBlock.state == 10:
+                detectBlock.initialCalibration()
+                detectBlock.publish_state.publish(1)
             
         else:
             detectBlock.findPriorityBlock()

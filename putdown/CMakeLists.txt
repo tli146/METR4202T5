@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.16)
 
 
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
+  std_msgs
   rospy
   sensor_msgs
-  std_msgs
+  geometry_msgs
   message_generation
   ximea_color
   metr4202_topics
@@ -26,7 +26,13 @@ generate_messages(
 project( metr4202_putdown )
 
 catkin_package(
-  CATKIN_DEPENDS geometry_msgs rospy sensor_msgs std_msgs message_runtime ximea_color_detect metr4202_state
+  CATKIN_DEPENDS geometry_msgs 
+  rospy 
+  sensor_msgs 
+  std_msgs 
+  message_runtime 
+  ximea_color_detect 
+  metr4202_state
 )
 
 
