@@ -14,7 +14,7 @@ class StateManager:
     def __init__(self):
 
 
-        self.state = 1
+        self.state = 0
 
         self.pub = rospy.Publisher(
             'metr4202_state',

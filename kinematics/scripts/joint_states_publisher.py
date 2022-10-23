@@ -54,6 +54,13 @@ def inverse_kinematics(desired_pos):
     # desired distance to robot (radius)
     dr = np.sqrt(dx**2 + dy**2)
 
+    '''# change in z dependent on r
+    dz = dz + 0.1*dr
+
+    # change in x and y dependent on r
+    dx = dx*(1+0.001*dr)
+    dy = dy*(1+0.001*dr)'''
+
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
@@ -86,7 +93,7 @@ class Joint_Handler:
         self.frames = 0
         self.block_msg = block()
         self.block_msg.wait = True
-        self.state = 1
+        self.state = 0
 
         # Create publisher to joint states
         self.pub = rospy.Publisher(
@@ -135,15 +142,32 @@ class Joint_Handler:
         block_y = self.block_y
         block_z = self.block_z
         state = self.state
+        calibrating = False
 
         # Copy of block's coords (so it remembers)
         sleep = 0
         desired_pos = [0, -100, 100]
         block_msg = self.block_msg
+        thetalist = [0,0,0,0]
         
+        # State 0: calibration
+        if state == 0:
+            thetalist = [0, np.pi/2, 0, 0]
+            sleep = 5
+            self.state_pub.publish(11)
+            calibrating = True
+        # State 11: intermediate calibration stage
+        if state == 11:
+            thetalist = [0, np.pi/2, 0, 0]
+            calibrating = True
+            self.state_pub.publish(10)
+        if state == 10:
+            thetalist = [0, np.pi/2, 0, 0]
+            calibrating = True
         # State 1 and wait: robot in initial neutral position
         if state == 1 and block_msg.wait:
-            sleep = 2
+            desired_pos = [0, -100, 100]
+            sleep = 1
             self.publish_message.publish( "1 and wait") 
         # if not wait, move to next state
         elif state == 1 and not block_msg.wait:
@@ -152,21 +176,20 @@ class Joint_Handler:
             self.block_z = block_msg.z
             self.state_pub.publish(2)
             self.publish_message.publish( "1 and not wait") 
-            sleep =0
+            sleep = 5
         # State 2: robot moving to above the block
         elif state == 2:
-
             desired_pos = [block_x, block_y, block_z + 50]
             self.state_pub.publish(3)
             sleep = 2
         # State 3: robot lowering on block
         elif state == 3:
-            desired_pos = [block_x, block_y, block_z + 10]
+            desired_pos = [block_x, block_y, block_z + 0]
             self.state_pub.publish(4)
             sleep = 2
         # State 4: gripper grabbing block
         elif state == 4:
-            desired_pos = [block_x, block_y, block_z + 10]
+            desired_pos = [block_x, block_y, block_z + 0]
             self.state_pub.publish(5)
             sleep = 1
         # State 5: robot showing block to camera
@@ -184,8 +207,8 @@ class Joint_Handler:
         # Perform inverse kinematics for desired position
         
 
-
-        thetalist = inverse_kinematics(desired_pos)
+        if not calibrating:
+            thetalist = inverse_kinematics(desired_pos)
 
         # Create message of type JointState
         msg = JointState(
