@@ -319,7 +319,9 @@ if __name__ == '__main__':
     
     while not rospy.is_shutdown():
         
+
         if not detectBlock.calibrated:
+            detectBlock.publish_message.publish("calibrating")
             if detectBlock.state == 10:
                 detectBlock.initialCalibration()
                 
