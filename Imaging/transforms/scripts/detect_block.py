@@ -153,8 +153,8 @@ class DetectBlock:
         #set calibration aruco code location
         self.Tox = np.array([
             [1,0,0,0],
-            [0,-1,0,-0.196],
-            [0,0,-1,0.117],
+            [0,-1,0,-0.180],
+            [0,0,-1,0.15],
             [0,0,0,1]
         ])
 
@@ -180,6 +180,7 @@ class DetectBlock:
         Tcx = self.find_transM(Transf)
         self.Toc = np.dot(self.Tox, mr.TransInv(Tcx))
         self.calibrated = True
+        self.publish_state.publish(1)
         
         
 
@@ -321,7 +322,7 @@ if __name__ == '__main__':
         if not detectBlock.calibrated:
             if detectBlock.state == 10:
                 detectBlock.initialCalibration()
-                detectBlock.publish_state.publish(1)
+                
             
         else:
             detectBlock.findPriorityBlock()
