@@ -78,11 +78,26 @@ int main(int argc, char** argv) {
 				}
 				cam[serial]->SetGain(ximea_ros.gain);
 			}
+
+			if (c == ' ' ) {
+				rgb_toggle = !rgb_toggle;
+			}
+			if (rgb_flag != rgb_toggle) {
+				rgb_flag = rgb_toggle;
+				if (!rgb_toggle) {
+					img_format = img_formats[0];
+					format = formats[0];
+				} else {
+					img_format = img_formats[1];
+					format = formats[1];
+				}
+			cam[serial]->SetImageDataFormat(img_format);
+			}
 			
 			
 			//set to only use RGB camera
-			img_format = img_formats[1];
-			format = formats[1];
+			//img_format = img_formats[1];
+			//format = formats[1];
 			
 			cam[serial]->SetImageDataFormat(img_format);
 			
