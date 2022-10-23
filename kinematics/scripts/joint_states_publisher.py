@@ -138,13 +138,13 @@ class Joint_Handler:
             This will be constantly called as 'priority_block' is changed: won't always use
             the block coords though. Needs priority_block constantly updated '''
 
+        # Copy of block's coords (so it remembers)
         block_x = self.block_x
         block_y = self.block_y
         block_z = self.block_z
         state = self.state
         calibrating = False
 
-        # Copy of block's coords (so it remembers)
         sleep = 0
         desired_pos = [0, -100, 100]
         block_msg = self.block_msg
@@ -179,9 +179,12 @@ class Joint_Handler:
 
             self.state_pub.publish(2)
             self.publish_message.publish( "1 and not wait") 
-            sleep = 3.5
-            if block_y < -200:
-                block_y = block_y + 10
+            sleep = 1
+            if block_x > 20:
+                block_x = block_x + 20
+            if block_y < -150:
+                block_y = block_y + 70
+                block_z = block_z + 20
                 sleep = 5
         # State 2: robot moving to above the block
         elif state == 2:
@@ -190,17 +193,17 @@ class Joint_Handler:
             sleep = 1
         # State 3: robot lowering on block
         elif state == 3:
-            desired_pos = [block_x, block_y, 40]
+            desired_pos = [block_x, block_y, 50]
             self.state_pub.publish(4)
             sleep = 1
         # State 4: gripper grabbing block
         elif state == 4:
-            desired_pos = [block_x, block_y, 40]
+            desired_pos = [block_x, block_y, 50]
             self.state_pub.publish(5)
             sleep = 1
         # State 5: robot showing block to camera
         elif state == 5:
-            desired_pos = [0, -190, 330]
+            desired_pos = [0, -180, 330]
             self.state_pub.publish(6)
             sleep = 4
         # State 6: robot moving to dropoff
@@ -211,8 +214,12 @@ class Joint_Handler:
         # State 7: robot releasing block
         elif state == 7:
             desired_pos = [80, 120, 60]
+            self.state_pub.publish(8)
+        # State 8: back to home position
+        elif state == 8:
+            desired_pos = [0, -100, 100]
             self.state_pub.publish(1)
-            sleep = 0.5
+            sleep = 3
 
 
         # Perform inverse kinematics for desired position
