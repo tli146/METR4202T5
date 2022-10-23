@@ -12,13 +12,9 @@ import pigpio               # this import can generate PWN signal
 
 # Import message types
 from std_msgs.msg import Header,Int16           #✔
-# from grip_set.msg import putdown_state
-# from grip_set.msg import gripperset
 from metr4202_state import current_state        #✔
 from sensor_msgs.msg import JointState          #✔
 from ximea_color_detect import ColorRGBA   # necessary import color info #✔
-#from sensor_msgs.msg import state
-#from geometry_msgs.msg import Pose          # necessary#✔
 
 def putdownkinematics(pose: Pose) -> JointState: #generate output type which is jointstate// pub JointState
     global pub      # variable  which carry the info of JointState and position
@@ -90,17 +86,11 @@ def gripper_set(value):           # pub gripper_set
     global statePub     # state info pub to topic "state" to change the whole program to next state 
     global gripperset 
 
-    # no usage
-    # rpi = pigpio.pi()   # use rpi package to control motor
-    # rpi.set_mode(18, pigpio.OUTPUT)
-    # rpi.set_servo_pulsewidth(18,value)
     #1000 is the closed position
     #1500 is the grip box position
     #2000 is the open position 
 
     # Create message of type gripset
-    # msg = gripperset()          # output msg is gripperset
-    # msg.gripperset = (2000)     # msg is 20000
     gripperPub.publish(2000)     # msg published as name "gripperPub"
     
     rospy.sleep(0.5)            # after 0.5s change state to 0, at this moment, the gripper is already open
@@ -122,7 +112,7 @@ def main ():
     global state1 
     global gripperPub
     global statePub
-        # Initialise node with any node name
+    # Initialise node with any node name
     rospy.init_node('metr42025_putdownkinematics')
 
     # creat subscriber of state

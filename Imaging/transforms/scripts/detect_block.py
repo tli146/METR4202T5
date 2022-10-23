@@ -291,12 +291,15 @@ class DetectBlock:
        
 
     def rotationDetect(self, newBlocks, blockList):
-        return False
+        
         for i in newBlocks:
             for j in blockList:
                 if i.id == j.id:
                     if np.abs(i.absTheta - j.absTheta) > rotation_theta_threshold:
+                        rot = str(np.abs(i.absTheta - j.absTheta))
+                        detectBlock.publish_message.publish(rot)
                         return True
+
                     return False
                 
                         
@@ -321,7 +324,7 @@ if __name__ == '__main__':
         
 
         if not detectBlock.calibrated:
-            detectBlock.publish_message.publish(str(detectBlock.state))
+
             if detectBlock.state == 10:
                 detectBlock.initialCalibration()
                 
