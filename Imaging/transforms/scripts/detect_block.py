@@ -13,8 +13,8 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
-calibration_ID = 13
-ros_rate = 2
+calibration_ID = 1
+ros_rate = 10
 rotation_theta_threshold = 3 
 #degrees
 
@@ -281,6 +281,7 @@ class DetectBlock:
        
 
     def rotationDetect(self, newBlocks, blockList):
+        return False
         for i in newBlocks:
             for j in blockList:
                 if i.id == j.id:
