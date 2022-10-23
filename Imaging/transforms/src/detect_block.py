@@ -37,10 +37,9 @@ class DetectedBlock:
         self.coordinate = np.multiply(p, 1000)
 
         theta_1 = np.arctan2(r[0][1], r[0][2])
-        theta_1 = theta_1%(np.pi/4)
         theta_2 = np.arctan2(p[1], p[0])
-        self.theta = int(np.rad2deg( np.abs(theta_1 - theta_2)))
-        self.absTheta = int(np.rad2deg(theta_1))
+        self.theta = int(np.rad2deg( np.abs(theta_1 - theta_2))%45)
+        self.absTheta = int(np.rad2deg(theta_1)%45)
         self.priority = 0
 
 
@@ -97,6 +96,8 @@ class DetectBlock:
     def stateUpdater(self, data):
         self.state = data
 
+    
+
 
     def __init__(self):
         self.pub =rospy.Publisher(
@@ -119,17 +120,26 @@ class DetectBlock:
         String
         )  
 
+
+        self.publish_state = rospy.Publisher(
+        'metr4202_state',
+        Int16
+        )  
+
         self.sub_state = rospy.Subscriber(
         "metr4202_state",
         Int16,
         self.stateUpdater
         )
 
+
         self.sub_fiducials_transform = rospy.Subscriber(
         "fiducial_transforms",
         FiducialTransformArray,
         self.detection_callback       
         )
+
+
         self.calibrated = False
 
         #set calibration aruco code location
@@ -173,6 +183,8 @@ class DetectBlock:
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == calibration_ID):
                     self.calibrate(fiducial.transform)
+                    self.state = 1
+                    self.publish_state(self.state)
                     return str(self.Toc)
             listID.append(fiducial.fiducial_id)
         return "calibration id not found" 
