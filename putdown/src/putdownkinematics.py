@@ -10,15 +10,12 @@ import numpy as np
 import modern_robotics as mr
 import pigpio               # this import can generate PWN signal
 
-# Import message types
+# Import functions or types
 from std_msgs.msg import Header,Int16           #✔
-# from grip_set.msg import putdown_state
-# from grip_set.msg import gripperset
 from metr4202_state import current_state        #✔
 from sensor_msgs.msg import JointState          #✔
 from ximea_color_detect.cpp import ColorRGBA   # necessary import color info #✔
-#from sensor_msgs.msg import state
-#from geometry_msgs.msg import Pose          # necessary#✔
+
 
 def putdownkinematics() -> JointState: #generate output type which is jointstate// pub JointState
     global pub      # variable  which carry the info of JointState and position
