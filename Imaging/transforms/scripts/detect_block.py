@@ -297,12 +297,13 @@ class DetectBlock:
         for i in newBlocks:
             for j in blockList:
                 if i.id == j.id:
-                    if np.abs(i.absTheta - j.absTheta) > rotation_theta_threshold:
-                        rot = str(np.abs(i.absTheta - j.absTheta))
-                        detectBlock.publish_message.publish(rot)
-                        return True
+                    rot = str(np.abs(i.absTheta - j.absTheta))
+                    detectBlock.publish_message.publish(rot)
+                    if np.abs(i.absTheta - j.absTheta) < rotation_theta_threshold:
+                        detectBlock.publish_message.publish("not rotating")
+                        return False
 
-                    return False
+        return True
                 
                         
 
@@ -314,11 +315,12 @@ class DetectBlock:
 if __name__ == '__main__':
 
     rospy.init_node('detect_block')
+
     #set frequency to increase performance
     rate = rospy.Rate(ros_rate)
     detectBlock = DetectBlock()
     
-    #while not detectBlock.calibrated:
+    
     
         
     
@@ -334,7 +336,7 @@ if __name__ == '__main__':
         else:
             if detectBlock.state == 1:
                 detectBlock.findPriorityBlock()
-            detectBlock.publish_message.publish("finding priority")
+                detectBlock.publish_message.publish("finding priority")
             
 
         rate.sleep()
