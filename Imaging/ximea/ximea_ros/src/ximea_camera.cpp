@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 	}
 	
 	nh_rgb = ros::NodeHandle();
-	sub_rgb = nh_rgb.subscribe("/ximea_ros/show_rgb", 1000, toggle_callback);
+	sub_rgb = nh_rgb.subscribe("/ximea_ros/show_rgb", 800, toggle_callback);
 
 	bool rgb_flag = rgb_toggle;
 	while (ros::ok()) {

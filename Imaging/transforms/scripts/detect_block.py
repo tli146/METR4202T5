@@ -14,7 +14,7 @@ from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
 calibration_ID = 2
-ros_rate = 10
+ros_rate = 5
 rotation_theta_threshold = 5 
 #degrees
 
@@ -258,14 +258,15 @@ class DetectBlock:
                 deltaX = i.coordinate[0] - j.coordinate[0]
                 deltaY = i.coordinate[1] - j.coordinate[1]
                 dist = np.sqrt( np.square(deltaX) + np.square(deltaY))
-                if(dist > 75):
-                    dist = 100
-                if(dist < 40):
+                if(dist > 70):
                     dist = 0
+                if(dist < 65):
+                    dist = 100
+                
                 sumDis += dist
             distWeight = sumDis/numBlocks
 
-            priority = i.theta*2 + distWeight + np.abs(i.coordinate[1]/ 2)
+            priority = i.theta*3 + distWeight + np.abs(i.coordinate[1]/ 4)
             i.setPriority(priority)
 
             #find highest priority (lower better)
@@ -331,7 +332,8 @@ if __name__ == '__main__':
                 
             
         else:
-            detectBlock.findPriorityBlock()
+            if detectBlock == 1:
+                detectBlock.findPriorityBlock()
             # detectBlock.publish_message.publish("finding priority")
             
 

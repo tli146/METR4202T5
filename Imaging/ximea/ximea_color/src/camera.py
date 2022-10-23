@@ -16,7 +16,7 @@ class CameraViewer:
     self.bridge = CvBridge()
     self.serial = serial
     self.image_sub = rospy.Subscriber(f"/ximea_ros/ximea_{self.serial}/image_raw", Image, self.callback)
-    self.color_pub = rospy.Publisher("/test_color", ColorRGBA, queue_size=10)
+    self.color_pub = rospy.Publisher("/test_color", ColorRGBA, queue_size=2)
     self.data = None
 
   def callback(self,data):
