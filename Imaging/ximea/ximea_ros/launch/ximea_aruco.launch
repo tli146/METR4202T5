@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
+<!--hellooooooooo tonyyyyyyyyyyy-->
     <arg name="serial" default="31706251"/>
     <include file="$(find aruco_detect)/launch/aruco_detect.launch">
         <arg name="camera" value="/ximea_ros/ximea_$(arg serial)"/>

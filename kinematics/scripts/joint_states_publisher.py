@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-This script publishes a set of random joint states to the dynamixel controller.
-Use this to get an idea of how to code your inverse kinematics!
+This script obtains the desired position from block.msg and 
+publishes a set of joint states to the dynamixel controller.
+Also handles the state transitions since it is run at a high frequency
 """
 
 # Always need this
@@ -17,14 +18,9 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import Pose
 from metr4202_msgs.msg import block
 
-def inverse_kinematics(block_msg: block) -> JointState:
-    global pub
-    global state
-    global state1_wait
+def inverse_kinematics(desired_pos):
 
-    rospy.loginfo('Inverse_Kinematics')
-
-    state1_wait = block_msg.wait
+    rospy.loginfo('Inverse_Kinematics ' + str(desired_pos))
 
     """ ROBOT DIMENSION CONSTANTS (mm)"""
     L1 = 50
@@ -33,19 +29,6 @@ def inverse_kinematics(block_msg: block) -> JointState:
     L4 = 95
     L5 = 95
     deltaY = 17
-
-    # State 1 and wait: robot in initial neutral position
-    if state == 1 and block_msg.wait:
-        desired_pos = [0, -100, 100]
-
-    # if not wait, move to next state
-    elif state == 1 and not block_msg.wait:
-        state_pub = rospy.Publisher('state', Int16)
-        state_pub.publish(2)
-
-    # State 2: robot in
-    elif state == 2:
-        desired_pos = [block_msg.x, block_msg.y, block_msg.z]
 
     # neutral stable pos 
     #desired_pos = [0, -100, 100]
@@ -61,17 +44,16 @@ def inverse_kinematics(block_msg: block) -> JointState:
     #desired_pos = [0, -200, 300]
     # test pos
     #desired_pos = [0, -200, 100]
-    
-    # Subscribe to block information
-    #desired_pos = [block_msg.x, block_msg.y, block_msg.z]
 
     # desired x,y and z (ease of notation)
     dx, dy, dz = desired_pos
-    # desired distance to robot
+
+    # desired distance to robot (radius)
     dr = np.sqrt(dx**2 + dy**2)
+
+    # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     eas = [np.pi/2, 3*np.pi/4, np.pi/4, 0] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
-    # Iterate through list of end angles (ideally want pi/2 unless out of reach)
     for angle in eas:
         # cos theta_3
         ctheta3 = ((dr - L5*np.cos(angle) - deltaY*np.sin(angle))**2 + (dz+L5*np.sin(angle)-deltaY*np.cos(angle)-L1-L2)**2 - L3**2 - L4**2) \
@@ -88,8 +70,67 @@ def inverse_kinematics(block_msg: block) -> JointState:
     theta4 = np.pi/2 + ea - theta2 - theta3
     theta1 = np.arctan2(dx, -dy)
     thetalist = [theta1,theta2,theta3,theta4]
+    return thetalist
 
-    # Create message of type JointState
+   
+
+def callback_block(block_msg: block) -> JointState:
+    ''' Handles what position we want from the state and publishes 
+        This will be constantly called as 'priority_block' is changed: won't always use
+        the block coords though. Needs priority_block constantly updated '''
+
+    global pub
+    global state
+    global frames
+    # Initiate publisher
+    state_pub = rospy.Publisher('metr4202_state', Int16)
+
+    # State 1 and wait: robot in initial neutral position
+    if state == 1 and block_msg.wait:
+        desired_pos = [0, -100, 100]
+    # if not wait, move to next state
+    elif state == 1 and not block_msg.wait:
+        state_pub.publish(2)
+    # State 2: robot moving to above the block
+    elif state == 2:
+        desired_pos = [int(block_msg.x), int(block_msg.y), int(block_msg.z) + 50]
+        frames += 1
+        if frames >= 300:
+            state_pub.publish(3)
+            frames = 0
+    # State 3: robot lowering on block
+    elif state == 3:
+        desired_pos = [int(block_msg.x), int(block_msg.y), int(block_msg.z)]
+        frames += 1
+        if frames >= 200:
+            state_pub.publish(4)
+            frames = 0
+    # State 4: gripper grabbing block
+    elif state == 4:
+        desired_pos = [int(block_msg.x), int(block_msg.y), int(block_msg.z)]
+        frames += 1
+        if frames >= 100:
+            state_pub.publish(5)
+            frames = 0
+    # State 5: robot showing block to camera
+    elif state == 5:
+        desired_pos = [0, -200, 300]
+        frames += 1
+        if frames >= 300:
+            state_pub.publish(6)
+            frames = 0
+    # State 6: robot showing block to camera
+    elif state == 6:
+        desired_pos = [80, 120, 60]
+        frames += 1
+        if frames >= 300:
+            state_pub.publish(1)
+            frames = 0
+
+    # Perform inverse kinematics for desired position
+    thetalist = inverse_kinematics(desired_pos)
+
+     # Create message of type JointState
     msg = JointState(
         # Set header with current time
         header=Header(stamp=rospy.Time.now()),
@@ -116,8 +157,9 @@ def main():
     # Initialise node
     rospy.init_node('invkin_pickup')
 
-    """ Main loop """
     global pub
+    global frames
+    frames = 0
 
     # Create publisher to joint states
     pub = rospy.Publisher(
@@ -130,10 +172,10 @@ def main():
     sub = rospy.Subscriber(
         'priority_block', # Topic name
         block, # Message type
-        inverse_kinematics # Callback function (required)
+        callback_block # Callback function (required)
     )
 
-    # subscribe to state
+    # subscribe to the current state
     sub2 = rospy.Subscriber(
         'metr4202_state',
         Int16,
@@ -145,7 +187,6 @@ def main():
 
 
 if __name__ == '__main__':
-    
     main()
     
 
