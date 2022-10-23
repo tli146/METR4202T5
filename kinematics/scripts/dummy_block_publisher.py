@@ -15,8 +15,8 @@ def dummy_block_publisher_initiate(waitBool):
     )
     msg = block()
     msg.x = 0
-    msg.y = -150
-    msg.z = 100
+    msg.y = -200
+    msg.z = 50
     msg.wait = waitBool
     pub_dummy.publish(msg)
 
@@ -33,14 +33,16 @@ def main():
         Int16,
         callback_state
     )
+    dummy_block_publisher_initiate(True)
     while not rospy.is_shutdown():
         loop += 1
         if loop > 1000:
             dummy_block_publisher_initiate(False)
+            loop = 0
         else:
             dummy_block_publisher_initiate(True)
-        if state == 5:
-            loop = 0
+            rospy.loginfo('Stop waiting')
+
     
     rospy.spin()
 

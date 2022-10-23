@@ -13,6 +13,7 @@ def gripper_set(value):
     #2000 is the open position 
 
 def callback(state: Int16):
+    rospy.loginfo('Callback received')
     if state.data == 1 or state.data == 2 or state.data == 3: #add other states here
         gripper_set(2000) # Open
     elif state.data == 4 or state.data == 5: #add other states here
