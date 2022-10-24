@@ -96,6 +96,8 @@ class Joint_Handler:
         # For specific questions
         self.question = '1'
         self.radius = 0
+        # CHANGE Z CONSTANT IF TOO SHORT
+        self.z_constant = 0
 
         # Create publisher to joint states
         self.pub = rospy.Publisher(
@@ -232,20 +234,20 @@ class Joint_Handler:
 
         # State 22: robot moving to above the block
         elif state == 22:
-            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 70]
+            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 70 + self.z_constant]
             self.publish_message.publish(str(desired_pos))
             if block_msg.wait:
                 self.state_pub.publish(23)
 
         # State 23: robot lowering on block
         elif state == 23:
-            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 50]
+            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 50 + self.z_constant]
             self.state_pub.publish(24)
             sleep = 1
 
         # State 24: gripper grabbing block
         elif state == 24:
-            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 50]
+            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 50 + self.z_constant]
             self.state_pub.publish(25)
             sleep = 0.75
 
