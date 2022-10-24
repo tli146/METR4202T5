@@ -5,7 +5,7 @@ run in sequence:
 sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb >/dev/null <<<0
 
 sudo pigpiod
-roslaunch metr4202_launch metr4202_launch.launch with ROS Noetic to start up program for 1, 2 and 3B
+roslaunch metr4202_launch metr4202_launch.launch with ROS Noetic to start up program for 1, 2 and 3A
 roslaunch metr4202_launch metr4202_launch_3b.launch with ROS Noetic to start up program for 3B 
 
 Required packages:
@@ -16,6 +16,7 @@ ximea_ros
 Ximea_api
 aruco_detect
 dynamixel_interface
+pigpio
 
 Runtime environment:
 ROS 1 Noetic
