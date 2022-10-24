@@ -51,7 +51,7 @@ def inverse_kinematics(desired_pos):
     dr = np.sqrt(dx**2 + dy**2)
 
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
-    eas = [np.pi/2, 0] # End effector angles (with horizontal axis) to iterate through
+    eas = [np.pi/2, 0, -np.pi/3] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     for angle in eas:
         # cos theta_3
@@ -220,7 +220,7 @@ class Joint_Handler:
             self.radius = np.sqrt(self.block_x**2 + (self.block_y + 200)**2)
 
             self.state_pub.publish(22)
-            self.publish_message.publish( "1 and not wait") 
+            self.publish_message.publish("Radius: " + str(self.radius))
             sleep = 0.5
 
             # Adjust by some constants
@@ -232,21 +232,20 @@ class Joint_Handler:
 
         # State 22: robot moving to above the block
         elif state == 22:
-            desired_pos = [self.radius* np.cos(37*np.pi/180), -200+self.radius*np.sin(37*np.pi/180), 70]
+            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 70]
             self.publish_message.publish(str(desired_pos))
-            if not block_msg.wait:
+            if block_msg.wait:
                 self.state_pub.publish(23)
 
-            sleep = 1
         # State 23: robot lowering on block
         elif state == 23:
-            desired_pos = [self.radius* np.cos(37*np.pi/180), -200+self.radius*np.sin(37*np.pi/180), 50]
+            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 50]
             self.state_pub.publish(24)
             sleep = 1
 
         # State 24: gripper grabbing block
         elif state == 24:
-            desired_pos = [self.radius* np.cos(37*np.pi/180), -200+self.radius*np.sin(37*np.pi/180), 50]
+            desired_pos = [self.radius* np.cos(37*np.pi/180)-10, -200+self.radius*np.sin(37*np.pi/180), 50]
             self.state_pub.publish(25)
             sleep = 0.75
 

@@ -25,10 +25,10 @@ def callback(state: Int16):
     # Check if state hasn't changed
     if state_previous != state:
         # Open gripper on given states
-        if state.data == 1 or state.data == 2:
+        if state.data == 1 or state.data == 2 or state.data == 22:
             gripper_set(2000) # Open
         # Close gripper on given state
-        elif state.data == 5:
+        elif state.data == 5 or state.data == 25:
             gripper_set(1500) # Close
     state_previous = state
 

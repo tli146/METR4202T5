@@ -2,6 +2,7 @@
 ROS repository for robotic arm UQ METR4202
 main branch.
 
+sudo pigpiod
 roslaunch metr4202_launch metr4202_launch.launch with ROS Noetic to start up program for 1, 2 and 3B
 roslaunch metr4202_launch metr4202_launch_3b.launch with ROS Noetic to start up program for 3B 
 
