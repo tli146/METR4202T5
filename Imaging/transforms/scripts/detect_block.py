@@ -268,44 +268,27 @@ class DetectBlock:
 
         pubEmpty = False
         wait = False
-        #state 22 is q 3B
-        if self.state == 22:
-            #in 3b, robot will wait when block is detected and grab when block is not detected
-            #priority block will publish block with wait = true when detecting and empty with wait = false when block is under the gripper
-            wait = True
-            numBlocks = len(self.blockList)
-            if numBlocks ==0:
-                emptyBlock = Block()
-                emptyBlock.wait = False
-                self.pub.publish(emptyBlock)
-                return
-            
-            elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
-                emptyBlock = Block()
-                emptyBlock.wait = False
-                self.pub.publish(emptyBlock)
-                return
 
-        else:
-            numBlocks = len(self.blockList)
-            if numBlocks ==0:
-                pubEmpty = True
-                #self.publish_message.publish("no blocks")
+        
+        numBlocks = len(self.blockList)
+        if numBlocks ==0:
+            pubEmpty = True
+            #self.publish_message.publish("no blocks")
             
-            elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
-                pubEmpty = True
-                #self.publish_message.publish("only calibration cube found")
+        elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
+            pubEmpty = True
+            #self.publish_message.publish("only calibration cube found")
             
-            elif self.rotating:
-                pubEmpty = True
-                #self.publish_message.publish("rotating")
+        elif self.rotating:
+            pubEmpty = True
+            #self.publish_message.publish("rotating")
 
-            if pubEmpty:
-                #publish wait command to block
-                emptyBlock = Block()
-                emptyBlock.wait = True
-                self.pub.publish(emptyBlock)
-                return
+        if pubEmpty:
+            #publish wait command to block
+            emptyBlock = Block()
+            emptyBlock.wait = True
+            self.pub.publish(emptyBlock)
+            return
             #publish empty wait if no tags detected or only calibration is detected
 
         for i in self.blockList:
