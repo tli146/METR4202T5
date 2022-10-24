@@ -305,9 +305,7 @@ class DetectBlock:
                 emptyBlock = Block()
                 emptyBlock.wait = True
                 self.pub.publish(emptyBlock)
-
-
-            return
+                return
             #publish empty wait if no tags detected or only calibration is detected
 
         for i in self.blockList:
