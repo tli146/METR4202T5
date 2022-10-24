@@ -162,6 +162,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/joint_states_publisher.py
+  scripts/joint_states_3b.py
   scripts/dummy_block_publisher.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
