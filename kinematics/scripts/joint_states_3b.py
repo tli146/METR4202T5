@@ -51,7 +51,7 @@ def inverse_kinematics(desired_pos):
     dr = np.sqrt(dx**2 + dy**2)
 
     # Iterate through list of end angles (ideally want pi/2 unless out of reach)
-    eas = [np.pi/3, 0, -np.pi/3] # End effector angles (with horizontal axis) to iterate through
+    eas = [np.pi/2, 0] # End effector angles (with horizontal axis) to iterate through
     ea = np.pi/2
     for angle in eas:
         # cos theta_3
@@ -93,8 +93,9 @@ class Joint_Handler:
         self.colour = 0
         # Desired position to put down block (initialise to whatever)
         self.desired_putdown = [0,0,200]
-        # For specific question number
+        # For specific questions
         self.question = '1'
+        self.radius = 0
 
         # Create publisher to joint states
         self.pub = rospy.Publisher(
@@ -215,7 +216,10 @@ class Joint_Handler:
             self.block_y = block_msg.y
             self.block_z = block_msg.z
 
-            self.state_pub.publish(2)
+            # FOR QUESTION 3B
+            self.radius = np.sqrt(self.block_x**2 + (self.block_y + 200)**2)
+
+            self.state_pub.publish(22)
             self.publish_message.publish( "1 and not wait") 
             sleep = 0.5
 
@@ -226,52 +230,54 @@ class Joint_Handler:
                 self.block_y = self.block_y + 10
                 self.block_z = self.block_z + 20
 
-        # State 2: robot moving to above the block
-        elif state == 2:
-            desired_pos = [self.block_x, self.block_y, 70]
-            self.state_pub.publish(3)
+        # State 22: robot moving to above the block
+        elif state == 22:
+            desired_pos = [self.radius* np.cos(37*np.pi/180), -200+self.radius*np.sin(37*np.pi/180), 70]
+            self.publish_message.publish(str(desired_pos))
+            if not block_msg.wait:
+                self.state_pub.publish(23)
 
             sleep = 1
-        # State 3: robot lowering on block
-        elif state == 3:
-            desired_pos = [self.block_x, self.block_y, 50]
-            self.state_pub.publish(4)
+        # State 23: robot lowering on block
+        elif state == 23:
+            desired_pos = [self.radius* np.cos(37*np.pi/180), -200+self.radius*np.sin(37*np.pi/180), 50]
+            self.state_pub.publish(24)
             sleep = 1
 
-        # State 4: gripper grabbing block
-        elif state == 4:
-            desired_pos = [self.block_x, self.block_y, 50]
-            self.state_pub.publish(5)
+        # State 24: gripper grabbing block
+        elif state == 24:
+            desired_pos = [self.radius* np.cos(37*np.pi/180), -200+self.radius*np.sin(37*np.pi/180), 50]
+            self.state_pub.publish(25)
             sleep = 0.75
 
-        # State 5: robot showing block to camera
-        elif state == 5:
+        # State 25: robot showing block to camera
+        elif state == 25:
             desired_pos = [0, -180, 330]
-            self.state_pub.publish(9)
+            self.state_pub.publish(29)
             sleep = 1.5
 
-        # State 9: detect colour
-        elif state == 9:
+        # State 29: detect colour
+        elif state == 29:
             desired_pos = [0, -180, 330]
-            self.state_pub.publish(6)
+            self.state_pub.publish(26)
             sleep = 1
             self.desired_putdown = colour_pos[self.colour]
 
-        # State 6: robot moving to dropoff
-        elif state == 6:
+        # State 26: robot moving to dropoff
+        elif state == 26:
             desired_pos = self.desired_putdown
-            self.state_pub.publish(7)
+            self.state_pub.publish(27)
             sleep = 1.5
 
-        # State 7: robot releasing block
-        elif state == 7:
+        # State 27: robot releasing block
+        elif state == 27:
             rospy.sleep(0.5)
             desired_pos = [80, 120, 60]
-            self.state_pub.publish(8)
+            self.state_pub.publish(28)
 
 
-        # State 8: back to home position
-        elif state == 8:
+        # State 28: back to home position
+        elif state == 28:
             desired_pos = [0, -100, 100]
             self.state_pub.publish(1)
             sleep = 1
