@@ -278,11 +278,13 @@ class DetectBlock:
                 emptyBlock = Block()
                 emptyBlock.wait = False
                 self.pub.publish(emptyBlock)
+                return
             
             elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
                 emptyBlock = Block()
                 emptyBlock.wait = False
                 self.pub.publish(emptyBlock)
+                return
 
         else:
             numBlocks = len(self.blockList)
@@ -346,6 +348,7 @@ class DetectBlock:
         currentBlock = self.blockList[0]
         if currentBlock.id == calibration_ID and len(self.blockList)>1:
             currentBlock = self.blockList[1]
+            
         for block in self.blockList:
             if not block.id == calibration_ID:
                 if block < currentBlock:
