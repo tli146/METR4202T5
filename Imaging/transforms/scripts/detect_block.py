@@ -280,7 +280,10 @@ class DetectBlock:
             #self.publish_message.publish("only calibration cube found")
             
         elif self.rotating:
+            
             pubEmpty = True
+            if self.state == 22:
+                pubEmpty = False
             #self.publish_message.publish("rotating")
 
         if pubEmpty:
