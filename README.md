@@ -1,6 +1,8 @@
 # METR4202T5
 ROS repository for robotic arm UQ METR4202
 main branch.
+run in sequence:
+sudo tee /sys/module/usbcore/parameters/usbfs_memory_mb >/dev/null <<<0
 
 roslaunch metr4202_launch metr4202_launch.launch with ROS Noetic to start up program for 1, 2 and 3B
 roslaunch metr4202_launch metr4202_launch_3b.launch with ROS Noetic to start up program for 3B 
