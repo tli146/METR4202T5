@@ -423,7 +423,7 @@ if __name__ == '__main__':
             
         else:
             #publish detected priority block
-            if detectBlock.state == 1:
+            if detectBlock.state == 1 or detectBlock.state == 22:
                 detectBlock.findPriorityBlock()
                 #detectBlock.publish_message.publish("finding priority")
             
