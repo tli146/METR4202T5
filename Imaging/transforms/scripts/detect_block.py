@@ -13,13 +13,14 @@ from fiducial_msgs.msg import FiducialTransform, FiducialTransformArray
 from geometry_msgs.msg import Transform
 from std_msgs.msg import Header, String, Int16, Bool
 
+#constants
 calibration_ID = 2
 ros_rate = 5
 rotation_theta_threshold = 5 
 #degrees
 
 class DetectedBlock:
-
+#class of detected aruco code blocks
     def __init__(self, id, Transf, Toc) -> None:
         rotQ = Transf.rotation
         transQ = Transf.translation
@@ -27,27 +28,32 @@ class DetectedBlock:
         rotM = R.as_matrix(rotM)
         transM = np.array([transQ.x, transQ.y, transQ.z])
         Tca = mr.RpToTrans(rotM, transM)
+        #calculate transformation matrices of the block in camera frame
 
 
         Toa = np.dot(Toc,Tca)
+        #calculate transformation matrices of the block in robot frame
 
         r, p = mr.TransToRp(Toa)
 
         self.id = id
         self.coordinate = np.multiply(p, 1000)
+        #convert to mm
 
         theta_1 = int(np.rad2deg(np.arctan2(r[0][0], r[0][1])))
         theta_1 = theta_1%90
 
+
         if(theta_1 >45):
             theta_1 = 90 - abs(theta_1)
-        
-
-
         theta_2 = int(np.rad2deg(np.arctan2(p[1], p[0])))
 
         self.theta = np.abs(theta_1 - theta_2)
+        #find difference in angle between block and gripper
+
         self.absTheta = int(np.rad2deg(theta_1)%45)
+        #find actual angle of the block to robot axis
+
         self.priority = 0
 
 
@@ -62,6 +68,7 @@ class DetectedBlock:
         self.priority = priority 
 
     def toMsg(self) -> Block:
+        #convert block to block message
         msg = Block()
         msg.id = self.id
         msg.x = int(self.coordinate[0])
@@ -71,6 +78,8 @@ class DetectedBlock:
         
         return msg
 
+
+    #priority comparators for block
     def _is_valid_operand(self, other):
         return (hasattr(other, "priority"))
 
@@ -97,44 +106,55 @@ class DetectedBlock:
 
 class DetectBlock:
     def detection_callback(self, fiducialTransformArray: FiducialTransformArray):
+        #async update on receiving new transform information
         self.transformList = fiducialTransformArray.transforms
+
     
     
                 
     def stateUpdater(self, data):
+        #async update on receiving new state information
         self.state = data.data
 
     
 
 
     def __init__(self):
+
+
         self.pub =rospy.Publisher(
+        #publishes the next block to pick up
         'priority_block', # Topic name
         Block, # Message type
         )
 
         self.publish_block = rospy.Publisher(
+            #debug publisher to publish amount of blocks detected
         'block_detect',
         String
         )
 
         self.publish_raw = rospy.Publisher(
+            #debug publisher to fiducials transforms of blocks detected
         'theta_raw',
         String
         )  
 
         self.publish_message = rospy.Publisher(
+            #debug publisher for message outputs of the detect_block node
         'metr4202_message',
         String
         )  
 
 
         self.publish_state = rospy.Publisher(
+            #state machine publisher
         'metr4202_state',
         Int16
         )  
 
         self.sub_state = rospy.Subscriber(
+            #state machine subscriber
         "metr4202_state",
         Int16,
         self.stateUpdater
@@ -142,6 +162,7 @@ class DetectBlock:
 
 
         self.sub_fiducials_transform = rospy.Subscriber(
+            #subscribe to aruco tag transforms from aruco_detect
         "fiducial_transforms",
         FiducialTransformArray,
         self.detection_callback       
@@ -150,7 +171,7 @@ class DetectBlock:
 
         self.calibrated = False
 
-        #set calibration aruco code location
+        #set calibration aruco code Transformation, T origin to T calibration code location
         self.Tox = np.array([
             [1,0,0,0],
             [0,-1,0,-0.215],
@@ -158,6 +179,7 @@ class DetectBlock:
             [0,0,0,1]
         ])
 
+        #backup calibration Transformation for flat arm pose calibration
         self.ToxFlat = np.array([
             [1,0,0,0],
             [0,-1,0,-0.190],
@@ -165,6 +187,8 @@ class DetectBlock:
             [0,0,0,1]
         ])
 
+
+        #init object variables to avoid NoneType error
         self.Toc = []
         self.state = 0
         self.transformList = []
@@ -175,6 +199,7 @@ class DetectBlock:
 
 
     def find_transM(self, Transf:Transform):
+        #converts fiducial transform to 4x4 transformation matrix
         rotQ = Transf.rotation
         transQ = Transf.translation
         rotM = R.from_quat([rotQ.x,rotQ.y,rotQ.z,rotQ.w] )
@@ -185,6 +210,7 @@ class DetectBlock:
 
 
     def calibrate(self, Transf: Transform):
+        #performs final calibration based on aruco transform and publishes next state command
         Tcx = self.find_transM(Transf)
         self.Toc = np.dot(self.Tox, mr.TransInv(Tcx))
         self.calibrated = True
@@ -194,6 +220,7 @@ class DetectBlock:
 
         
     def initialCalibration(self):
+        #attempts calibration of system  
         listID = []
         if self.transformList == None:
             return "No aruco cubes detected"
@@ -210,6 +237,7 @@ class DetectBlock:
 
 
     def track_fiducial(self, id):
+        #trac single fiducial based on ID and outputing 2D coordinate information
         for fiducial in self.transformList:
             if(fiducial.fiducial_id == id):
                 block = DetectedBlock(id, fiducial.transform, self.Toc)
@@ -222,6 +250,8 @@ class DetectBlock:
 
     def findPriorityBlock(self):
         #require system to be calibrated
+        #finds the next block to be picked up
+
 
         newBlocks = []
         for fiducial in self.transformList:
@@ -237,27 +267,46 @@ class DetectBlock:
 
 
         pubEmpty = False
-        numBlocks = len(self.blockList)
-        if numBlocks ==0:
-            pubEmpty = True
-            #self.publish_message.publish("no blocks")
+        wait = False
+        #state 22 is q 3B
+        if self.state == 22:
+            #in 3b, robot will wait when block is detected and grab when block is not detected
+            #priority block will publish block with wait = true when detecting and empty with wait = false when block is under the gripper
+            wait = True
+            numBlocks = len(self.blockList)
+            if numBlocks ==0:
+                emptyBlock = Block()
+                emptyBlock.wait = False
+                self.pub.publish(emptyBlock)
             
-        elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
-            pubEmpty = True
-            #self.publish_message.publish("only calibration cube found")
-            
-        elif self.rotating:
-            pubEmpty = True
-            #self.publish_message.publish("rotating")
+            elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
+                emptyBlock = Block()
+                emptyBlock.wait = False
+                self.pub.publish(emptyBlock)
 
-        if pubEmpty:
-            emptyBlock = Block()
-            emptyBlock.wait = True
-            self.pub.publish(emptyBlock)
+        else:
+            numBlocks = len(self.blockList)
+            if numBlocks ==0:
+                pubEmpty = True
+                #self.publish_message.publish("no blocks")
+            
+            elif numBlocks == 1 and self.blockList[0].id == calibration_ID:
+                pubEmpty = True
+                #self.publish_message.publish("only calibration cube found")
+            
+            elif self.rotating:
+                pubEmpty = True
+                #self.publish_message.publish("rotating")
+
+            if pubEmpty:
+                #publish wait command to block
+                emptyBlock = Block()
+                emptyBlock.wait = True
+                self.pub.publish(emptyBlock)
+
+
             return
-
-        
-        #publish empty wait if no tags detected or only calibration is detected
+            #publish empty wait if no tags detected or only calibration is detected
 
         for i in self.blockList:
             sumDis = 0
@@ -271,11 +320,16 @@ class DetectBlock:
                     dist = 0
                 if(dist < 65):
                     dist = 100
+                #calculating weight of distances on the priority calculation
+                #Logic: avoid block clusters when picking up 
                 
                 sumDis += dist
             distWeight = sumDis/numBlocks
 
             L = np.sqrt( np.square(i.coordinate[0]) + np.square(i.coordinate[1]))
+            #finding weight of distance from robot on the priority calculation
+            #Logic: pick up further one away to avoid knocking down adjacent blocks
+            #Logic: pick up closer block when block is hard to reach
 
             yWeight = np.abs(L/ 2)
             if L > 230 :
@@ -283,9 +337,11 @@ class DetectBlock:
 
 
             priority = i.theta*2 + distWeight - yWeight
+            #finding weight of combined function including theta
+            #Logic: pick up block aligning with robot arm first
             i.setPriority(priority)
 
-            #find highest priority (lower better)
+            
 
         currentBlock = self.blockList[0]
         if currentBlock.id == calibration_ID and len(self.blockList)>1:
@@ -294,10 +350,12 @@ class DetectBlock:
             if not block.id == calibration_ID:
                 if block < currentBlock:
                     currentBlock = block
+        #find highest priority (lower better)
             
         blockMsg = currentBlock.toMsg()
-        blockMsg.wait = False
+        blockMsg.wait = wait
         self.pub.publish(blockMsg)
+        #publish block to ROS topic
         
         
         
@@ -309,6 +367,7 @@ class DetectBlock:
        
 
     def rotationDetect(self, newBlocks, blockList, oldBlockList):
+        #detects rotation to pause robot when rotating
         if oldBlockList == []:
             return True
         
@@ -324,6 +383,7 @@ class DetectBlock:
                 if j.id == k.id:
                     rot += np.abs(j.absTheta - k.absTheta)
                     detectBlock.publish_message.publish(str(rot))
+        #find rotation in the last two frames. If both are below threshold the conveyor belt is stopped
 
                     
         
@@ -347,7 +407,7 @@ if __name__ == '__main__':
     #set frequency to increase performance
     rate = rospy.Rate(ros_rate)
     detectBlock = DetectBlock()
-    
+    #instantiate object
     
     
         
@@ -356,12 +416,13 @@ if __name__ == '__main__':
         
 
         if not detectBlock.calibrated:
-
+            #calibrate when not calibrated
             if detectBlock.state == 10:
                 detectBlock.initialCalibration()
                 
             
         else:
+            #publish detected priority block
             if detectBlock.state == 1:
                 detectBlock.findPriorityBlock()
                 #detectBlock.publish_message.publish("finding priority")
